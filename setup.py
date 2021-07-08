@@ -1,0 +1,1 @@
+execfile('setup/create_departments.py')
