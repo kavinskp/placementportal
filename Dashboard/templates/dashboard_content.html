@@ -1,0 +1,20 @@
+{% extends 'dashboard_index.html' %}
+{% block body %}
+    {% include 'dashboard_topbar.html' %}
+    <div class="container wrapper">
+        <div class="row">
+            <div class="col-sm-4">
+                <nav class="navbar navbar-expand-sm  navbar-light" style="background-color: #b1b8bd;">
+                    <button class="btn btn-primary navbar-toggler" data-toggle="collapse" data-target="#sideBar">
+                        =
+                    </button>
+                    {% include 'dashboard_sidebar.html' %}
+                </nav>
+            </div>
+            <div class="col-sm-8">
+                {% block rightPanel %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

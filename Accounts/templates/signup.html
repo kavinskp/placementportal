@@ -1,21 +1,42 @@
 {% extends 'index.html' %}
-{% block content %}
+{% block title %}Signup{% endblock %}
+{% block form_content %}
     <form method="post" class="form-container">
         {% csrf_token %}
         <h2 class="text-center">Sign Up</h2>
         <hr class="my-3"/>
+        {% if error %}
+            <div class="alert alert-danger">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                {% for error_msg in  error %}
+                    <strong>{{ error_msg }}<br/></strong>
+                {% endfor %}
+            </div>
+        {% endif %}
         {% for field in form %}
-            <p>
+            <div class="form-group">
                 {{ field.label_tag }}<br/>
-                {{ field }}
-{#                {% if field.help_text %}#}
-{#                    <small style="color: grey">{{ field.help_text }}</small>#}
-{#                {% endif %}#}
+                {{ field }} <br/>
                 {% for error in field.errors %}
                     <small style="color: red">{{ error }}</small>
                 {% endfor %}
-            </p>
+            </div>
         {% endfor %}
-        <button type="submit">Sign up</button>
+        <div>
+            <div class="btn-group" data-toggle="buttons">
+                <label class="btn btn-default">
+                    <input name="acc_type" value="staff" type="radio"> I' m a Staff
+                </label>
+                <label class="btn btn-default">
+                    <input name="acc_type" value="student" type="radio" required> I' m a student
+                </label>
+            </div>
+        </div>
+
+        <button type="submit" name="signup" class="btn btn-primary btn-block">Signup</button>
+
+        <hr class="my-3"/>
+        <small>Already have account? Click here to <a href="{% url 'login' %}"> Login</a></small>
     </form>
+
 {% endblock %}

@@ -1,0 +1,15 @@
+{% extends 'index.html' %}
+{% block title %}
+    {{ message.page_title }}
+{% endblock %}
+{% block form_content %}
+    <div class="form-container">
+        <h1>{{ message.title }}</h1>
+        <hr class="my-3"/>
+        <div class="container">
+            {% for desc in message.description %}
+                <p>{{ desc }} </p>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

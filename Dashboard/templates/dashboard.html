@@ -1,11 +1,13 @@
-{% extends 'dashboard_index.html' %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-{% block body %}{% endblock %}
-</body>
-</html>
+{% extends 'dashboard_content.html' %}
+{% block styles %}
+    <style>
+        .table-container {
+            margin-top: 100px;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px 0;
+        }
+    </style>
+{% endblock %}
+{% block rightPanel %}
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'index.html' %}
+{% block title %}Update Profile{% endblock %}
+{% block body_style %}
+{% endblock %}
+{% block body %}{% endblock %}
+{% block form_content2 %}
+    <form method="post" class="box-section">
+        {% csrf_token %}
+        <label>
+            <input type="text" name="user_name" value="{{ user_name }}" hidden/>
+        </label>
+        <label>
+            <input type="text" name="acc_type" value="{{ acc_type }}" hidden/>
+        </label>
+        {% if acc_type == 'staff' %}
+            <h2 class="text-center">Updating Staff Profile - {{ user_name }}</h2>
+        {% elif acc_type == 'student' %}
+            <h2 class="text-center">Updating Student Profile - {{ user_name }}</h2>
+        {% endif %}
+        <hr class="my-3"/>
+        {% if error %}
+            <div class="alert alert-danger">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                {% for error_msg in  error %}
+                    <strong>{{ error_msg }}<br/></strong>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% for field in form %}
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-sm-4 text-sm-end">{{ field.label_tag }}</div>
+                    <div class="col-sm-8">{{ field }} <br/>
+                        {% for error in field.errors %}
+                            <small style="color: red">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        <div class="row">
+            <div class="col-sm-4"></div>
+            <div class="col-sm-8">
+                <button type="submit" name="{{ acc_type }}" class="btn btn-primary btn-success">Update</button>
+            </div>
+        </div>
+    </form>
+{% endblock %}

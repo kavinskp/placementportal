@@ -1,0 +1,136 @@
+{% extends 'dashboard_content.html' %}
+{% block styles %}
+    <style>
+        .table-container {
+            margin-top: 100px;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px 0;
+        }
+    </style>
+{% endblock %}
+{% block rightPanel %}
+    <div class="row">
+        {% if notification %}
+            <div class="col-sm-2"></div>
+            <div class="col-sm-10 alert alert-success">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                {% for notif_msg in  notification %}
+                    <strong>{{ notif_msg }}<br/></strong>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="col-sm-12">
+            {% if unapproved_users_list %}
+                <div class="table-container">
+                    <h2>New Users</h2>
+                    <br/>
+                    <br/>
+                    <form method="POST" class="form-inline">{% csrf_token %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Id</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for user_i in unapproved_users_list %}
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" name="new_user"
+                                                   value="{{ user_i.user }}">
+                                            {{ forloop.counter }}
+                                        </td>
+                                        <td>{{ user_i.full_name }}</td>
+                                        <td>{{ user_i.email }}</td>
+                                        {% if request.session.user_type == 'Faculty' %}
+                                            <td>{{ user_i.roll_no }}</td>
+                                        {% else %}
+                                            <td>{{ user_i.staff_id }}</td>
+                                        {% endif %}
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <hr/>
+                        <br/>
+                        <div class="row" style="padding: 10px">
+                            <div class="col-sm-2"></div>
+                            <div class="col-sm-3">
+                                <button type="submit" name="approve" class="btn btn-success">Approve</button>
+                            </div>
+                            <div class="col-sm-2"></div>
+                            <div class="col-sm-3">
+                                <button type="submit" name="delete" class="btn btn-danger">Delete</button>
+                            </div>
+                            <div class="col-sm-2"></div>
+                        </div>
+
+                    </form>
+                </div>
+            {% else %}
+                <div class="table-container">
+                    <h3>No new users needed Approval</h3>
+                </div>
+            {% endif %}
+
+        </div>
+        <div class="col-sm-12">
+            {% if approved_users_list %}
+                <div class="table-container">
+                    <h2>Existing Users</h2>
+                    <br/>
+                    <br/>
+                    <form method="POST" class="form-inline">{% csrf_token %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Id</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for user_i in approved_users_list %}
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" name="existing_user"
+                                                   value="{{ user_i.user }}">
+                                            {{ forloop.counter }}
+                                        </td>
+                                        <td>{{ user_i.full_name }}</td>
+                                        <td>{{ user_i.email }}</td>
+                                        {% if request.session.user_type == 'Faculty' %}
+                                            <td>{{ user_i.roll_no }}</td>
+                                        {% else %}
+                                            <td>{{ user_i.staff_id }}</td>
+                                        {% endif %}
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <hr/>
+                        <br/>
+                        <div class="row" style="padding: 10px">
+                            <div class="col-sm-2"></div>
+                            <div class="col-sm-3">
+                                <button type="submit" name="de_approve" class="btn btn-warning">De Approve</button>
+                            </div>
+                            <div class="col-sm-7"></div>
+                        </div>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+{% endblock %}

@@ -114,6 +114,20 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
+MEDIA_URL = '/media/'
 
 AUTH_USER_MODEL = 'Accounts.CustomUser'
-AUTHENTICATION_BACKENDS = ['Accounts.backends.CustomUserAuth']
+AUTHENTICATION_BACKENDS = ('Accounts.backends.CustomUserAuth', 'django.contrib.auth.backends.ModelBackend')
+
+LOGIN_URL = '/login'
+LOGIN_REDIRECT_URL = '/dashboard/'
+
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.google.com'
+EMAIL_PORT = 25
+EMAIL_HOST_USER = 'mailer.placementportal@gmail.com'
+EMAIL_HOST_PASSWORD = 'Admin#1234'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+CURRENT_HOST_NAME = 'http://127.0.0.1:8000/'
