@@ -3,11 +3,11 @@
 {% block form_content %}
     <form class="form-container" method="post" action="{% url 'login' %}">
         {% csrf_token %}
-        {% if error %}
+        {% if alert_msg %}
             <div class="alert alert-danger">
                 <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                {% for error_msg in  error %}
-                    <strong>{{ error_msg }}<br/></strong>
+                {% for msg in  alert_msg %}
+                    <strong>{{ msg }}<br/></strong>
                 {% endfor %}
             </div>
         {% endif %}

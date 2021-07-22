@@ -1,23 +1,39 @@
-from Accounts.models import Department
+from Curriculum.models import Regulation, Batch, Department
+
 Department.objects.all().delete()
 
-dept1 = Department(name='CSE', full_name='COMPUTER SCIENCE AND ENGINEERING')
-dept2 = Department(name='IT', full_name='INFORMATION TECHNOLOGY')
-dept3 = Department(name='ECE', full_name='ELECTRONICS COMMUNICATION ENGINEERING')
-dept4 = Department(name='EEE', full_name='ELECTRICAL AND ELECTRONIC ENGINEERING')
-dept5 = Department(name='EIE', full_name='ELECTRONICS AND INSTRUMENTATION ENGINEERING')
-dept6 = Department(name='MECH', full_name='MECHANICAL ENGINEERING')
-dept7 = Department(name='CIVIL', full_name='CIVIL ENGINEERING')
-dept8 = Department(name='PROD', full_name='PRODUCT ENGINEERING')
-dept9 = Department(name='IBT', full_name='INDUSTRIAL BIO TECHNOLOGY')
-dept1.save()
-dept2.save()
-dept3.save()
-dept4.save()
-dept5.save()
-dept6.save()
-dept7.save()
-dept8.save()
-dept9.save()
+departments_set = (
+    ('CSE', 'COMPUTER SCIENCE AND ENGINEERING'),
+    ('IT', 'INFORMATION TECHNOLOGY'),
+    ('ECE', 'ELECTRONICS COMMUNICATION ENGINEERING'),
+    ('EEE', 'ELECTRICAL AND ELECTRONIC ENGINEERING'),
+    ('EIE', 'ELECTRONICS AND INSTRUMENTATION ENGINEERING'),
+    ('MECH', 'MECHANICAL ENGINEERING'),
+    ('CIVIL', 'CIVIL ENGINEERING'),
+    ('PROD', 'PRODUCT ENGINEERING'),
+    ('IBT', 'INDUSTRIAL BIO TECHNOLOGY'),
+    ('General', 'General Department')
+)
+for dep in departments_set:
+    Department.objects.create(name=dep[0],
+                              full_name=dep[1])
 
 print('department created')
+
+Regulation.objects.all().delete()
+
+regulation_set = (
+    (2014, 2, 'PG'),
+    (2015, 2, 'PG'),
+    (2014, 4, 'UG'),
+    (2015, 4, 'UG'),
+    (2016, 4, 'UG'),
+    (2017, 4, 'UG'),
+)
+
+for reg in regulation_set:
+    Regulation.objects.create(start_year=reg[0],
+                              programme_period=reg[1],
+                              programme=reg[2])
+
+print('Regulations created')

@@ -1,0 +1,74 @@
+{% extends 'dashboard_content.html' %}
+{% block styles %}
+    <style>
+        .table-container {
+            margin-top: 100px;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px 0;
+        }
+    </style>
+{% endblock %}
+{% block rightPanel %}
+
+    <div class="table-container">
+        {% if alert_msg %}
+            <div class="alert alert-success">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                {% for msg in  alert_msg %}
+                    <strong>{{ msg }}<br/></strong>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <h2 class="text-center">Placement Representative Details {% if batch_str %} for {{ batch_str }} {% endif %}</h2>
+
+
+        <hr class="my-3"/>
+        <div>
+            <table class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Batch</th>
+                    <th>Department</th>
+                    <th>Email</th>
+                    <th>Phone number</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for each in prs_info %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ each.full_name }}</td>
+                        <td>{{ each.batch }}</td>
+                        <td>{{ each.department }}</td>
+                        <td>{{ each.email }}</td>
+                        <td>{{ each.user.profile.phone_number |default_if_none:"" }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        $("#batch").change(function () {
+            var url = $("#choose_batch").attr("data-contents-url");
+            var dep_name = $(this).val();
+            $.ajax({                       // initialize an AJAX request
+                url: url,                    // set the url of the request (= localhost:8000/ajax/load_staffs/)
+                data: {
+                    'dep_name': dep_name       // add the dep_name to the GET parameters
+                },
+                success: function (data) {   // `data` is the return of the `load_staff` view function
+                    $("#staffs_field").html(data);  // replace the contents of the staffs input with the data that came from the server
+                }
+            });
+
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'dashboard_content.html' %}
+{% block styles %}
+    <style>
+        .table-container {
+            margin-top: 100px;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px 0;
+        }
+    </style>
+{% endblock %}
+{% block rightPanel %}
+    {% if messages %}
+        <div class="alert alert-success">
+            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+            {% for msg in  messages %}
+                <strong>{{ msg }}<br/></strong>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <div class="table-container">
+        <form method="post">{% csrf_token %}
+            {{ form.as_p }}
+            <input type="submit" value="Create Batch">
+        </form>
+    </div>
+
+{% endblock %}

@@ -2,10 +2,13 @@
     <ul class="navbar-nav flex-column">
         <li class="nav-item">
             <div class="user-info">
-                <a href="{% url 'dashboard' %}" class="navbar-brand">{{ user_obj.full_name }}</a>
-                <div><img src="{{ user_obj.avatar }}"></div>
-                <p>Email : {{ user_obj.user.email }}</p>
-                <p>{{ user_obj.get_designation }}</p>
+                <a href="{% url 'dashboard' %}" class="navbar-brand">{{ request.user.profile.full_name }}</a>
+                <div style="padding: 10px"><img
+                        src="{{ request.user.profile.get_profile_pic }}" width="100%"
+                        height=100vh"></div>
+
+                <p>Email : {{ request.user.email }}</p>
+                <p>Phone : {{ request.user.profile.phoneno }}</p>
             </div>
         </li>
 
@@ -15,17 +18,61 @@
         <li class="nav-item">
             <a class="nav-link active" href="#">Active</a>
         </li>
+        {% if request.user.get_user_type_display == 'Admin' or request.user.get_user_type_display == 'Staff' %}
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="collapse" data-target="#collapse1">
+                    Approve Users </span>
+                </a>
+                <ul id="collapse1" style="list-style: none">
+                    {% if perms.Accounts.can_approve_faculty or perms.Accounts.can_approve_student or perms.Accounts.can_allot_hod %}
+                        <li><a class="nav-link" href="{% url 'approve_users' %}">Approve Accounts</a></li>
+                    {% endif %}
+                    {#                    {% if perms.Accounts.can_approve_company %}#}
+                    {#                        <li><a class="nav-link" href="#">Approve Company</a></li>#}
+                    {#                    {% endif %}#}
+                </ul>
+            </li>
+        {% endif %}
+
+        {% if request.user.get_user_type_display == 'Admin' %}
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="collapse" data-target="#collapse1">
+                    Batches </span>
+                </a>
+                <ul id="collapse1" style="list-style: none">
+                    <li><a class="nav-link" href="{% url 'view_batches' %}">List Batches</a></li>
+                </ul>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="collapse" data-target="#collapse1">
+                    HOD Information </span>
+                </a>
+                <ul id="collapse1" style="list-style: none">
+                    {% if perms.Accounts.can_allot_hod %}
+                        <li><a class="nav-link" href="{% url 'list_hods_info' %}">List All Department HODs</a></li>
+                        <li><a class="nav-link" href="{% url 'assign_hod' %}">Assign HOD</a></li>
+                    {% endif %}
+                </ul>
+            </li>
+
+        {% endif %}
+
         <li class="nav-item">
             <a class="nav-link" data-toggle="collapse" data-target="#collapse1">
-                Approve Users </span>
+                Placement </span>
             </a>
             <ul id="collapse1" style="list-style: none">
-                {% if perms.Accounts.can_approve_faculty or perms.Accounts.can_approve_student or perms.Accounts.can_allot_hod %}
-                    <li><a class="nav-link" href="{% url 'approve_users' %}">Approve Accounts</a></li>
-                    <li><a class="nav-link" href="#">Approve Company</a></li>
+                <li><a class="nav-link" href="{% url 'view_po_details' %}">View Placement Officer Details</a></li>
+                <li><a class="nav-link" href="{% url 'view_all_pr_details' %}">View All Placement Representative
+                    Details</a></li>
+                {% if perms.Accounts.can_assign_pr %}
+                    <li><a class="nav-link" href="{% url 'assign_pr' %}">Assign Placement Representative</a></li>
                 {% endif %}
             </ul>
         </li>
+
+
         <li class="nav-item">
             <a class="nav-link" href="#">Link</a>
         </li>

@@ -1,0 +1,92 @@
+{% extends 'dashboard_content.html' %}
+{% block styles %}
+    <style>
+        .table-container {
+            margin-top: 100px;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px 0;
+        }
+    </style>
+{% endblock %}
+{% block rightPanel %}
+    <div class="table-container">
+        <div>
+            {% if messages %}
+                <div class="alert alert-success">
+                    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                    {% for msg in  messages %}
+                        <strong>{{ msg }}<br/></strong>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <h2 class="text-center">Current Batches Information</h2>
+            <hr class="my-3"/>
+            {% if batches %}
+                <table id="bootstrapdatatable" class="table table-bordered table-striped">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Batch Id</th>
+                        <th>Department</th>
+                        <th>Current Semester</th>
+                        <th>Programme Period</th>
+                        {% if perms.Curriculam.can_create_batches %}
+                            <th></th>
+                        {% endif %}
+
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for each in batches %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ each }}</td>
+                            <td>{{ each.department }}</td>
+                            <td>{{ each.current_semester }}</td>
+                            <td>{{ each.regulation.programme_period }}</td>
+                            {% if perms.Curriculam.can_create_batches %}
+                                <td><a href="{% url 'delete_batch' batch_id=each.id %}">
+                                    <button type="button" class="btn btn-danger">Delete Batch</button>
+                                </a></td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+
+                </table>
+            {% else %}
+                <h3 class="text-center">No Active Batches</h3>
+            {% endif %}
+        </div>
+        {% if perms.Curriculam.can_create_batches %}
+            <div class="table-container">
+                <h2 class="text-center">Create Batch</h2>
+                <hr class="my-3"/>
+
+
+                <form method="post" class="box-section" enctype="multipart/form-data">
+                    <div>
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="row">
+                                <div class="col-sm-4 text-sm-end">{{ field.label_tag }}</div>
+                                <div class="col-sm-8">{{ field }} <br/>
+                                    {% for error in field.errors %}
+                                        <small style="color: red">{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            </div><br/>
+                        {% endfor %}
+                        <br/>
+                        <div class="row">
+                            <div class="col-sm-4"></div>
+                            <div class="col-sm-4">
+                                <button type="submit" class="btn btn-success">Create Batch</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

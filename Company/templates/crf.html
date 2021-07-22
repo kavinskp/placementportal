@@ -1,0 +1,55 @@
+{% extends 'index.html' %}
+{% block title %}Update Profile{% endblock %}
+{% block body_style %}
+{% endblock %}
+{% block body %}{% endblock %}
+{% block form_content2 %}
+    <form method="post" class="box-section">
+        {% csrf_token %}
+        <h2 class="text-center">{{ title }}</h2>
+        <input type="hidden" name="form_type" value="{{ form_type }}">
+        <hr class="my-3"/>
+        <br/>
+        {% for field in form %}
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-sm-4 text-sm-end">{{ field.label }}
+                        {% if field.field.required %}
+                            <span class="required" style="color: red">*</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-sm-5">
+                        {{ field }}
+                        <br/>
+                        {% for error in field.errors %}
+                            <small style="color: red">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        <div class="form-group">
+            <div class="row">
+                {% if form_type == 'hr_info' %}
+                    <div class="col-sm-4"></div>
+                    <div class="col-sm-2">
+                        <button type="submit" name="save_and_add" class="btn btn-primary btn-primary">Save And Add
+                        </button>
+                    </div>
+                    <div class="col-sm-2"></div>
+                    <div class="col-sm-4">
+                        <button type="submit" name="submit" class="btn btn-primary btn-success">Submit
+                        </button>
+                    </div>
+                {% else %}
+                    <div class="col-sm-4"></div>
+                    <div class="col-sm-4">
+                        <button type="submit" name="submit" class="btn btn-primary btn-success">Submit
+                        </button>
+                    </div>
+                    <div class="col-sm-4"></div>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+{% endblock %}

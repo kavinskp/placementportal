@@ -1,9 +1,13 @@
 from django.forms import ModelForm
+from django.forms.widgets import RadioSelect
 from django.core.mail import send_mail
 from django import forms
 import re
+
 from PlacementPortal import settings
-from .models import *
+from Accounts.models import UserProfile, StaffAccount, CustomUser, GENDER_CHOICES
+from Curriculum.models import StudentInfo
+from Company.models import Company
 
 
 class LoginForm(forms.Form):
@@ -20,13 +24,27 @@ class LoginForm(forms.Form):
         return self.cleaned_data.get('password')
 
 
+USER_TYPE_CHOICES = (
+    (2, 'Staff'),
+    (3, 'Student'),
+    (4, 'Interviewer'),
+)
+
+
 class SignupForm(forms.Form):
-    email = forms.EmailField()
-    password1 = forms.CharField(widget=forms.PasswordInput)
-    password2 = forms.CharField(widget=forms.PasswordInput)
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email Address'}))
+    password1 = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password'}))
+    password2 = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password (Again)'}))
+    user_type = forms.IntegerField(
+        widget=RadioSelect(attrs={'class': 'radioChoice'}, choices=USER_TYPE_CHOICES))
 
     def clean_email(self):
-        email = self.cleaned_data['email'].strip()
+        cd = self.cleaned_data
+        email = cd.get('email')
+        if not re.match(r'^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$', email):
+            raise forms.ValidationError("Please enter a valid email id")
         if CustomUser.objects.filter(email=email):
             raise forms.ValidationError("This email id has already been registered")
         return email
@@ -54,11 +72,7 @@ class SignupForm(forms.Form):
 
     class Meta:
         model = CustomUser
-        fields = ('email', 'password1', 'password2')
-        exclude = (
-            'is_approved',
-            'is_verified'
-        )
+        fields = ('email', 'password1', 'password2', 'user_type')
 
     def sendEmail(self, datas):
         link = settings.CURRENT_HOST_NAME + 'activate/' + datas['activation_key']
@@ -72,29 +86,26 @@ class DateInput(forms.DateInput):
     input_type = 'date'
 
 
-class UpdateProfileStaff(ModelForm):
-
-    def clean_designation(self):
-        designation = self.cleaned_data.get('designation')
-        if designation > 1:
-            return designation
-        raise forms.ValidationError('Choose proper designation')
+class UserProfileForm(ModelForm):
+    gender = forms.CharField(
+        widget=RadioSelect(attrs={'class': 'radioChoice'}, choices=GENDER_CHOICES))
 
     class Meta:
-        model = Staff
+        model = UserProfile
+        fields = '__all__'
         widgets = {
             'dob': DateInput(),
         }
-        fields = '__all__'
-        exclude = ['user']
 
 
-class UpdateProfileStudent(ModelForm):
-
+class StaffAccountForm(ModelForm):
     class Meta:
-        model = Student
-        widgets = {
-            'dob': DateInput(),
-        }
+        model = StaffAccount
         fields = '__all__'
-        exclude = ['user']
+        exclude = ['user', 'designation']
+
+
+class StudentInfoForm(ModelForm):
+    class Meta:
+        model = StudentInfo
+        fields = '__all__'

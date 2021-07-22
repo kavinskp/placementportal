@@ -35,6 +35,8 @@
                                     <th>#</th>
                                     <th>Name</th>
                                     <th>Email</th>
+                                    <th>Designation</th>
+                                    <th>Department</th>
                                     <th>Id</th>
                                 </tr>
                                 </thead>
@@ -46,12 +48,22 @@
                                                    value="{{ user_i.user }}">
                                             {{ forloop.counter }}
                                         </td>
-                                        <td>{{ user_i.full_name }}</td>
+                                        <td>{{ user_i.user.profile.full_name }}</td>
                                         <td>{{ user_i.email }}</td>
-                                        {% if request.session.user_type == 'Faculty' %}
-                                            <td>{{ user_i.roll_no }}</td>
+                                        {% if user_i.user.get_user_type_display == 'Staff' %}
+                                            <td>{{ user_i.get_designation_display }}</td>
                                         {% else %}
+                                            <td>Student</td>
+                                        {% endif %}
+                                        {% if user_i.user.get_user_type_display == 'Staff' %}
+                                            <td>{{ user_i.department }}</td>
+                                        {% else %}
+                                            <td>{{ user_i.info.department }}</td>
+                                        {% endif %}
+                                        {% if user_i.user.get_user_type_display == 'Staff' %}
                                             <td>{{ user_i.staff_id }}</td>
+                                        {% else %}
+                                            <td>{{ user_i.info.roll_no }}</td>
                                         {% endif %}
                                     </tr>
                                 {% endfor %}
@@ -95,6 +107,8 @@
                                     <th>#</th>
                                     <th>Name</th>
                                     <th>Email</th>
+                                    <th>Designation</th>
+                                    <th>Department</th>
                                     <th>Id</th>
                                 </tr>
                                 </thead>
@@ -108,10 +122,16 @@
                                         </td>
                                         <td>{{ user_i.full_name }}</td>
                                         <td>{{ user_i.email }}</td>
-                                        {% if request.session.user_type == 'Faculty' %}
-                                            <td>{{ user_i.roll_no }}</td>
+                                        {% if user_i.user.get_user_type_display == 'Staff' %}
+                                            <td>{{ user_i.get_designation_display }}</td>
                                         {% else %}
+                                            <td>Student</td>
+                                        {% endif %}
+                                        <td>{{ user_i.department }}</td>
+                                        {% if user_i.user.get_user_type_display == 'Staff' %}
                                             <td>{{ user_i.staff_id }}</td>
+                                        {% else %}
+                                            <td>{{ user_i.roll_no }}</td>
                                         {% endif %}
                                     </tr>
                                 {% endfor %}

@@ -1,0 +1,128 @@
+{% extends 'dashboard_content.html' %}
+{% block styles %}
+    <style>
+        .table-container {
+            margin-top: 100px;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px 0;
+        }
+    </style>
+{% endblock %}
+{% block rightPanel %}
+
+    <div class="table-container">
+        {% if alert_msg %}
+            <div class="alert alert-success">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                {% for msg in  alert_msg %}
+                    <strong>{{ msg }}<br/></strong>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <h2 class="text-center">Placement Representative Details</h2>
+
+        <hr class="my-3"/>
+        <div>
+            <table class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Batch</th>
+                    <th>Roll No</th>
+                    <th>Email</th>
+                    <th>Phone number</th>
+                    {% if perms.Accounts.can_assign_pr %}
+                        <th></th>
+                    {% endif %}
+                </tr>
+                </thead>
+                <tbody>
+                {% for each in prs_info %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ each.full_name }}</td>
+                        <td>{{ each.info.batch }}</td>
+                        <td>{{ each.roll_no }}</td>
+                        <td>{{ each.email }}</td>
+                        <td>{{ each.user.profile.phone_number |default_if_none:"" }}</td>
+                        {% if perms.Accounts.can_assign_pr %}
+                            <td><a href="{% url 'un_assign_pr' roll_no=each.roll_no %}">
+                                <button type="button" class="btn btn-danger">Un Assign</button>
+                            </a></td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% if perms.Accounts.can_assign_pr %}
+            <br/>
+            <br/>
+            <h2 class="text-center">Assign Placement Representative</h2>
+            <hr class="my-3"/>
+
+            <div class="container">
+                <form method="post" id="allotPRForm"
+                      data-content-url="{% url 'ajax_load_students_for_given_dep_batch' %}">
+                    {% csrf_token %}
+                    <input type="text" name="dep_name" value="{{ dep_name }}" hidden/>
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <label for="batch" class="form-label">Batch</label>
+                        </div>
+                        <div class="col-sm-8">
+                            <select class="form-select" id="batch" name="dep_name">
+                                <option value="" disabled selected>-----</option>
+                                {% for batch in batches %}
+                                    <option value="{{ batch.pk }}">{{ batch.get_batch_display }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <br/>
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <label for="students_filed" class="form-label">Students</label>
+                        </div>
+                        <div class="col-sm-8">
+                            <select class="form-select" id="students_filed" name="roll_no">
+                                <option value="" disabled selected>----</option>
+                            </select>
+                        </div>
+                    </div>
+                    <br/>
+                    <div class="row">
+                        <div class="col-sm-4"></div>
+                        <div class="col-sm-8">
+                            <button type="submit" class="btn btn-primary btn-success">Assign as PR</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        $("#batch").change(function () {
+            var url = $("#allotPRForm").attr("data-content-url");
+            var batch_id = $(this).val();
+            var dep_name = $('#dep_name').val()
+            $.ajax({                       // initialize an AJAX request
+                url: url,                    // set the url of the request (= localhost:8000/ajax/load_staffs/)
+                data: {
+                    'dep_name': dep_name,
+                    'batch_id': batch_id   // add the dep_name to the GET parameters
+                },
+                success: function (data) {   // `data` is the return of the `load_staff` view function
+                    $("#students_filed").html(data);  // replace the contents of the staffs input with the data that came from the server
+                }
+            });
+
+        });
+    </script>
+{% endblock %}

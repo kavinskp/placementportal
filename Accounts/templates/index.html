@@ -24,6 +24,16 @@
             }
         </style>
     {% endblock %}
+    {% block styles %}
+        <style type="text/css">
+            .radioChoice, .radioChoice > li {
+                list-style: none;
+                display: inline-block;
+                margin: 0;
+                padding: 0;
+            }
+        </style>
+    {% endblock %}
 
 </head>
 
@@ -44,10 +54,25 @@
         </ul>
     </div>
 </nav>
+{% if error_msg %}
+    <div class="modal modal-success" id="ErrorModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    {% for msg in error_msg %}
+                        {{ msg }}
+                    {% endfor %}
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
 {% block body %}
     <section class="container-fluid">
         <section class="row justify-content-center">
-            <section class="col-12 col-sm-8 col-lg-3">
+            <section class="col-lg-4">
                 {% block form_content %}
                 {% endblock %}
             </section>
@@ -69,5 +94,12 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
+<script>
+    {% if error_msg %}
+        $(window).on('load', function () {
+            $('#ErrorModal').modal('show');
+        });
+    {% endif %}
+</script>
 </body>
 </html>

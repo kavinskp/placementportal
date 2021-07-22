@@ -5,33 +5,24 @@
         {% csrf_token %}
         <h2 class="text-center">Sign Up</h2>
         <hr class="my-3"/>
-        {% if error %}
+        {% if alert_msg %}
             <div class="alert alert-danger">
                 <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                {% for error_msg in  error %}
-                    <strong>{{ error_msg }}<br/></strong>
+                {% for alert_msg in  alert_msg %}
+                    <strong>{{ alert_msg }}<br/></strong>
                 {% endfor %}
             </div>
         {% endif %}
         {% for field in form %}
             <div class="form-group">
-                {{ field.label_tag }}<br/>
-                {{ field }} <br/>
-                {% for error in field.errors %}
-                    <small style="color: red">{{ error }}</small>
-                {% endfor %}
+                <div class="row">
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <small style="color: red">{{ error }}</small>
+                    {% endfor %}
+                </div>
             </div>
         {% endfor %}
-        <div>
-            <div class="btn-group" data-toggle="buttons">
-                <label class="btn btn-default">
-                    <input name="acc_type" value="staff" type="radio"> I' m a Staff
-                </label>
-                <label class="btn btn-default">
-                    <input name="acc_type" value="student" type="radio" required> I' m a student
-                </label>
-            </div>
-        </div>
 
         <button type="submit" name="signup" class="btn btn-primary btn-block">Signup</button>
 
