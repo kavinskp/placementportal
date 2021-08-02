@@ -11,28 +11,12 @@
 {% endblock %}
 {% block rightPanel %}
     <div class="table-container">
-        {% if alert_msg %}
-            <div class="alert alert-success">
-                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                {% for msg in  alert_msg %}
-                    <strong>{{ msg }}<br/></strong>
-                {% endfor %}
-            </div>
-        {% endif %}
-        {% if messages %}
-            <div class="alert alert-success">
-                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                {% for msg in  messages %}
-                    <strong>{{ msg }}<br/></strong>
-                {% endfor %}
-            </div>
-        {% endif %}
 
         <h2 class="text-center">View all department HODs Information</h2>
 
         <hr class="my-3"/>
         <div>
-            <table class="table table-bordered table-striped w-auto">
+            <table id="bootstrapdatatable" class="table table-bordered table-striped w-auto">
                 <thead>
                 <tr>
                     <th>#</th>
@@ -41,25 +25,94 @@
                     <th>Staff Id</th>
                     <th>Email</th>
                     <th>Phone number</th>
-                    <th></th>
+                    {% if perms.Curriculum.can_assign_hod %}
+                        <th></th>
+                    {% endif %}
                 </tr>
                 </thead>
                 <tbody>
-                {% for each in hods_info %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ each.department }}</td>
-                        <td>{{ each.full_name }}</td>
-                        <td>{{ each.staff_id }}</td>
-                        <td>{{ each.email }}</td>
-                        <td>{{ each.user.profile.phone_number |default_if_none:"" }}</td>
-                        <td><a href="{% url 'un_assign_hod' staff_id=each.staff_id %}">
-                            <button type="button" class="btn btn-danger">Un Assign</button>
-                        </a></td>
-                    </tr>
-                {% endfor %}
+                {% if hods_info %}
+                    {% for each in hods_info %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ each.department }}</td>
+                            <td>{{ each.full_name }}</td>
+                            <td>{{ each.staff_id }}</td>
+                            <td>{{ each.user.email }}</td>
+                            <td>{{ each.user.profile.phone_number |default_if_none:"" }}</td>
+                            {% if perms.Curriculum.can_assign_hod %}
+                                <td><a href="{% url 'un_assign_hod' staff_id=each.staff_id %}">
+                                    <button type="button" class="btn btn-danger">Un Assign</button>
+                                </a></td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                {% endif %}
             </table>
         </div>
+
+        {% if perms.Curriculum.can_assign_hod %}
+            <br/>
+            <br/>
+            <h2 class="text-center">Allot HOD</h2>
+            <hr class="my-3"/>
+            <div class="container">
+                <form method="post" id="allotHODForm" data-staff-url="{% url 'ajax_load_faculties' %}">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <label for="department" class="form-label">Department</label>
+                        </div>
+                        <div class="col-sm-8">
+                            <select id="department" name="dep_name">
+                                <option value="" disabled selected>-----</option>
+                                {% for dep in departments %}
+                                    <option value="{{ dep.name }}">{{ dep.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <br/>
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <label for="staffs_field" class="form-label">Staff</label>
+                        </div>
+                        <div class="col-sm-8">
+                            <select class="form-select" id="staffs_field" name="staff_id">
+                                <option value="" disabled selected>----</option>
+                            </select>
+                        </div>
+                    </div>
+                    <br/>
+                    <div class="row">
+                        <div class="col-sm-4"></div>
+                        <div class="col-sm-8">
+                            <button type="submit" class="btn btn-primary btn-success">Allot as HOD</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
     </div>
 
+{% endblock %}
+
+
+{% block scripts %}
+    <script>
+        $("#department").change(function () {
+            var url = $("#allotHODForm").attr("data-staff-url");
+            var dep_name = $(this).val();
+            $.ajax({                       // initialize an AJAX request
+                url: url,                    // set the url of the request (= localhost:8000/ajax/load_staffs/)
+                data: {
+                    'dep_name': dep_name       // add the dep_name to the GET parameters
+                },
+                success: function (data) {   // `data` is the return of the `load_staff` view function
+                    $("#staffs_field").html(data);  // replace the contents of the staffs input with the data that came from the server
+                }
+            });
+
+        });
+    </script>
 {% endblock %}

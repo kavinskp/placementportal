@@ -12,18 +12,10 @@
 {% block rightPanel %}
     <div class="table-container">
         <div>
-            {% if messages %}
-                <div class="alert alert-success">
-                    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                    {% for msg in  messages %}
-                        <strong>{{ msg }}<br/></strong>
-                    {% endfor %}
-                </div>
-            {% endif %}
             <h2 class="text-center">Current Batches Information</h2>
             <hr class="my-3"/>
             {% if batches %}
-                <table id="bootstrapdatatable" class="table table-bordered table-striped">
+                <table id="bootstrapdatatable" class="table table-bordered table-striped w-auto">
                     <thead>
                     <tr>
                         <th>#</th>
@@ -31,7 +23,7 @@
                         <th>Department</th>
                         <th>Current Semester</th>
                         <th>Programme Period</th>
-                        {% if perms.Curriculam.can_create_batches %}
+                        {% if perms.Curriculum.can_update_batches %}
                             <th></th>
                         {% endif %}
 
@@ -41,13 +33,13 @@
                     {% for each in batches %}
                         <tr>
                             <td>{{ forloop.counter }}</td>
-                            <td>{{ each }}</td>
+                            <td>{{ each.regulation }}</td>
                             <td>{{ each.department }}</td>
                             <td>{{ each.current_semester }}</td>
                             <td>{{ each.regulation.programme_period }}</td>
-                            {% if perms.Curriculam.can_create_batches %}
+                            {% if perms.Curriculum.can_update_batches %}
                                 <td><a href="{% url 'delete_batch' batch_id=each.id %}">
-                                    <button type="button" class="btn btn-danger">Delete Batch</button>
+                                    <button type="button" class="btn btn-danger"><i class="bi bi-trash"></i></button>
                                 </a></td>
                             {% endif %}
                         </tr>
@@ -58,7 +50,7 @@
                 <h3 class="text-center">No Active Batches</h3>
             {% endif %}
         </div>
-        {% if perms.Curriculam.can_create_batches %}
+        {% if perms.Curriculum.can_update_batches %}
             <div class="table-container">
                 <h2 class="text-center">Create Batch</h2>
                 <hr class="my-3"/>

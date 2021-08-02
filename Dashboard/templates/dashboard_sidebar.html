@@ -1,80 +1,68 @@
+{% load static %}
 <div class="collapse navbar-collapse" id="sideBar">
     <ul class="navbar-nav flex-column">
         <li class="nav-item">
             <div class="user-info">
                 <a href="{% url 'dashboard' %}" class="navbar-brand">{{ request.user.profile.full_name }}</a>
-                <div style="padding: 10px"><img
-                        src="{{ request.user.profile.get_profile_pic }}" width="100%"
-                        height=100vh"></div>
+                <div style="padding: 10px">
+                    <img class="img-thumbnail" width="100px"
+                         src="{{ MEDIA_ROOT }}{{ request.user.profile.get_profile_pic }}">
+                </div>
 
                 <p>Email : {{ request.user.email }}</p>
-                <p>Phone : {{ request.user.profile.phoneno }}</p>
+                <p>Phone : {{ request.user.profile.phone_number }}</p>
+                <p>{{ request.user.get_user_type_display }}</p>
+                <a href="{% url 'view_profile' %}">
+                    <button type="button" class="btn btn-danger">Profile</button>
+                </a>
             </div>
         </li>
 
         <hr class="my-3"/>
-
-
-        <li class="nav-item">
-            <a class="nav-link active" href="#">Active</a>
-        </li>
-        {% if request.user.get_user_type_display == 'Admin' or request.user.get_user_type_display == 'Staff' %}
+        {% if request.user.get_user_type_display == 'Interviewer' %}
+        {% else %}
             <li class="nav-item">
-                <a class="nav-link" data-toggle="collapse" data-target="#collapse1">
-                    Approve Users </span>
+                <a class="nav-link" data-toggle="collapse1" data-target="#collapse1">
+                    <span> Approve Users </span>
                 </a>
                 <ul id="collapse1" style="list-style: none">
-                    {% if perms.Accounts.can_approve_faculty or perms.Accounts.can_approve_student or perms.Accounts.can_allot_hod %}
-                        <li><a class="nav-link" href="{% url 'approve_users' %}">Approve Accounts</a></li>
+                    {% if perms.Accounts.can_approve_staff %}
+                        <li><a class="nav-link" href="{% url 'approve_staffs' %}">Approve Staff Accounts</a>
+                        </li>
                     {% endif %}
-                    {#                    {% if perms.Accounts.can_approve_company %}#}
-                    {#                        <li><a class="nav-link" href="#">Approve Company</a></li>#}
-                    {#                    {% endif %}#}
-                </ul>
-            </li>
-        {% endif %}
-
-        {% if request.user.get_user_type_display == 'Admin' %}
-            <li class="nav-item">
-                <a class="nav-link" data-toggle="collapse" data-target="#collapse1">
-                    Batches </span>
-                </a>
-                <ul id="collapse1" style="list-style: none">
-                    <li><a class="nav-link" href="{% url 'view_batches' %}">List Batches</a></li>
-                </ul>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" data-toggle="collapse" data-target="#collapse1">
-                    HOD Information </span>
-                </a>
-                <ul id="collapse1" style="list-style: none">
-                    {% if perms.Accounts.can_allot_hod %}
-                        <li><a class="nav-link" href="{% url 'list_hods_info' %}">List All Department HODs</a></li>
-                        <li><a class="nav-link" href="{% url 'assign_hod' %}">Assign HOD</a></li>
+                    {% if perms.Accounts.can_approve_student %}
+                        <li><a class="nav-link" href="{% url 'approve_students' %}">Approve Student Accounts</a></li>
+                    {% endif %}
+                    {% if perms.Accounts.can_approve_interviewer %}
+                        <li><a class="nav-link" href="{% url 'approve_interviewers' %}">Approve Interviewer Accounts</a>
+                        </li>
                     {% endif %}
                 </ul>
             </li>
 
-        {% endif %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'view_batches' %}">Active Batches</a>
+            </li>
 
-        <li class="nav-item">
-            <a class="nav-link" data-toggle="collapse" data-target="#collapse1">
-                Placement </span>
-            </a>
-            <ul id="collapse1" style="list-style: none">
-                <li><a class="nav-link" href="{% url 'view_po_details' %}">View Placement Officer Details</a></li>
-                <li><a class="nav-link" href="{% url 'view_all_pr_details' %}">View All Placement Representative
-                    Details</a></li>
-                {% if perms.Accounts.can_assign_pr %}
-                    <li><a class="nav-link" href="{% url 'assign_pr' %}">Assign Placement Representative</a></li>
-                {% endif %}
+            <li class="nav-item">
+            <li><a class="nav-link" href="{% url 'view_hods' %}">HOD information</a></li>
+            </li>
+
+
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="collapse" data-target="#collapse4">
+                    Placement </span>
+                </a>
+                <ul id="collapse" style="list-style: none">
+                    <li><a class="nav-link" href="{% url 'view_po_details' %}">View Placement Officer Details</a></li>
+                    <li><a class="nav-link" href="{% url 'view_all_pr_details' %}">View All Placement Representative
+                        Details</a></li>
+                    {% if perms.Curriculum.can_assign_pr %}
+                        <li><a class="nav-link" href="{% url 'assign_pr' %}">Assign Placement Representative</a></li>
+                    {% endif %}
+
+                </ul>
+            </li>
             </ul>
-        </li>
-
-
-        <li class="nav-item">
-            <a class="nav-link" href="#">Link</a>
-        </li>
-    </ul>
+        {% endif %}
 </div>

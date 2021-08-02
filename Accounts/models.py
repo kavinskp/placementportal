@@ -5,23 +5,64 @@ from django.db import models
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import AbstractUser
 from django.dispatch import receiver
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save
 from Curriculum.models import Department, StudentInfo
-from Company.models import Company
+from Company.models import CompanyInterview, CompanyInfo
 
 
 class UserType(enum.Enum):
-    ADMIN = 1
+    COLLEGE_ADMIN = 1
     STAFF = 2
     STUDENT = 3
     INTERVIEWER = 4
 
 
 class UserTypeValue(enum.Enum):
-    ADMIN = 'Admin'
+    COLLEGE_ADMIN = 'Admin'
     STAFF = 'Staff'
     STUDENT = 'Student'
     INTERVIEWER = 'Interviewer'
+
+
+class UserGroups(enum.Enum):
+    PRINCIPAL = 'Principal'
+    HOD = 'HOD'
+    FACULTY = 'Faculty'
+    FACULTY_ADVISOR = 'FacultyAdvisor'
+    STUDENT = 'Student'
+    PLACEMENT_OFFICER = 'PO'
+    PLACEMENT_REPRESENTATIVE = 'PR'
+    POINT_OF_CONTACT = 'POC'
+
+    def group_name(self):
+        return self.value
+
+
+class UserPermissions(enum.Enum):
+    CAN_APPROVE_STAFF = ('Accounts', 'can_approve_staff', 'Can approve Staff accounts')
+    CAN_APPROVE_STUDENT = ('Accounts', 'can_approve_student', 'Can approve Student accounts')
+    CAN_APPROVE_INTERVIEWER = ('Accounts', 'can_approve_interviewer', 'Can approve Interviewer accounts')
+    CAN_ASSIGN_HOD = ('Curriculum', 'can_assign_hod', 'Can allot HOD for Departments')
+    CAN_ASSIGN_FA = ('Curriculum', 'can_assign_fa', 'Can assign Faculty Advisor for Batches')
+    CAN_UPDATE_BATCHES = ('Curriculum', 'can_update_batches', 'Can update batch details')
+    CAN_ASSIGN_PO = ('Curriculum', 'can_assign_po', 'Can assign Placement officer')
+    CAN_ASSIGN_PR = ('Curriculum', 'can_assign_pr', 'Can assign Placement Representative')
+    CAN_ASSIGN_POC = ('Curriculum', 'can_assign_poc', 'Can assign Point of Contact for a company')
+
+    def get_app_label(self):
+        return self.value[0]
+
+    def get_code(self):
+        return self.value[1]
+
+    def get_description(self):
+        return self.value[2]
+
+    def get_permission(self):
+        return str(self.get_app_label()) + '.' + str(self.get_code())
+
+    def __str__(self):
+        return self.get_permission()
 
 
 USER_TYPES = (
@@ -63,20 +104,23 @@ class CustomUserManager(BaseUserManager):
         user = self.create_user(
             email,
             password=password,
-            user_type=UserType.ADMIN.value,
+            user_type=UserType.COLLEGE_ADMIN.value,
             activation_key=activation_key,
             key_expires=key_expires
         )
         user.is_superuser = True
         user.is_verified = True
         user.is_approved = True
+        user.is_active = True
+        user.has_filled_profile = True
+        user.account_created = True
         user.save(using=self._db)
         return user
 
 
 class UserProfile(models.Model):
     first_name = models.CharField(max_length=20)
-    middle_name = models.CharField(max_length=20, blank=True)
+    middle_name = models.CharField(max_length=20, blank=True, null=True)
     last_name = models.CharField(max_length=20)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     dob = models.DateField(verbose_name='Date of Birth')
@@ -90,12 +134,13 @@ class UserProfile(models.Model):
         name += ' ' + self.last_name
         return name
 
+    @property
     def get_profile_pic(self):
         if self.avatar is not None and self.avatar != "":
             return self.avatar.url
         if self.gender == 'F':
-            return "media/images/female.png"
-        return "media/images/male.png"
+            return "/media/images/female.png"
+        return "/media/images/male.png"
 
     def __str__(self):
         return self.full_name()
@@ -111,6 +156,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     has_filled_profile = models.BooleanField(default=False)
     account_created = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=False)
     marked_inactive = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
     activation_key = models.CharField(max_length=40, null=True)
@@ -128,13 +174,30 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def is_staff(self):
         return self.is_superuser
 
-    @property
-    def is_active(self):
+    def full_name(self):
+        if self.profile is not None:
+            return self.profile.full_name()
+        return None
+
+    def is_active_user(self):
         if not self.marked_inactive and self.is_verified and \
                 self.account_created and self.has_filled_profile and self.is_approved:
             return True
         else:
             return False
+
+
+@receiver(post_save, sender=CustomUser)
+def approve_status_post_save(sender, instance, created, *args, **kwargs):
+    current_val = instance.is_active_user()
+    if current_val:
+        if not instance.is_active:
+            instance.is_active = True
+            instance.save()
+    else:
+        if instance.is_active:
+            instance.is_active = False
+            instance.save()
 
 
 class StaffAccount(models.Model):
@@ -148,22 +211,25 @@ class StaffAccount(models.Model):
     designation = models.SmallIntegerField(choices=DESIGNATION, default=3)
     department = models.ForeignKey(Department, on_delete=models.CASCADE, verbose_name='Department')
 
-    def full_name(self):
-        return self.user.profile.full_name()
+    def __str__(self):
+        return str(self.user)
 
-    def email(self):
-        return self.user.email
+    def full_name(self):
+        return self.user.full_name()
 
     def get_id(self):
         return self.staff_id
-
-    def __str__(self):
-        return self.full_name()
 
 
 class StudentAccount(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     info = models.ForeignKey(StudentInfo, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.user)
+
+    def full_name(self):
+        return self.user.full_name()
 
     def department(self):
         return self.info.department
@@ -177,21 +243,14 @@ class StudentAccount(models.Model):
     def get_id(self):
         return self.roll_no()
 
-    def email(self):
-        return self.user.email
-
-    def full_name(self):
-        return self.user.profile.full_name()
-
-    def __str__(self):
-        return self.full_name()
-
 
 class InterviewerAccount(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-
-    def email(self):
-        return self.user.email
+    company_info = models.ForeignKey(CompanyInfo, on_delete=models.CASCADE)
+    interview = models.ForeignKey(CompanyInterview, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
-        return self.user.profile.full_name()
+        return str(self.user)
+
+    def full_name(self):
+        return self.user.full_name()

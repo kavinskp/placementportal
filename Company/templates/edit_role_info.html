@@ -1,0 +1,65 @@
+{% extends 'index.html' %}
+{% block title %}Edit Job Info{% endblock %}
+{% block body_style %}
+{% endblock %}
+{% block body %}{% endblock %}
+{% block form_content2 %}
+    <div class="box-section">
+        {% if messages %}
+            <div class="alert alert-success">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                {% for msg in  messages %}
+                    <strong>{{ msg }}<br/></strong>
+                {% endfor %}
+            </div>
+        {% endif %}
+        <form id="update_role_form" enctype="multipart/form-data" method="post">
+            <h2 class="text-center">{{ title }}</h2>
+            <hr class="my-3"/>
+            <br/>
+            <div class="form-group">
+                <div class="row">
+                    {% csrf_token %}
+                    <input type="hidden" name="company_id" value="{{ company_id }}">
+                    {% for field in form %}
+                        <div class="row">
+                            <div class="col-sm-4 text-sm-end">
+                                {{ field.label_tag }}
+                                {% if field.required %}
+                                    <span class="required" style="color: red">*</span>
+                                {% endif %}
+                            </div>
+                            <div class="col-sm-6">
+                                {{ field }}
+                            </div>
+                            {% for error in field.errors %}
+                                <small style="color: red">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                    </div>
+                    <div class="col-sm-8">
+                        <button type="button" class="close_window">
+                            Close
+                        </button>
+                        <button type="submit" name="update_role" class="btn btn-primary">
+                            Update
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script>
+        $(".close_window").click(function () {
+            var url = "page url you want to go back";//back page url
+            var objWindow = window.open(url, "_self");
+            objWindow.close();
+        });
+    </script>
+{% endblock %}

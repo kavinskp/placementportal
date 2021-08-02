@@ -6,6 +6,13 @@ urlpatterns = [
     url(r'^login', login_user, name='login'),
     url(r'^signup', signup, name='signup'),
     url(r'^logout', logout, name='logout'),
+    url(r'^view_profile', view_profile, name='view_profile'),
     url(r'^update_profile_pre_approval', update_profile_pre_approval, name='update_profile_pre_approval'),
-    url(r'^approve_users', approve_users, name='approve_users'),
+    url(r'^approve_staffs', approve_staff_accounts, name='approve_staffs'),
+    url(r'^approve_students', approve_student_accounts, name='approve_students'),
+    url(r'^approve_interviewers', approve_interviewer_accounts, name='approve_interviewers'),
+
+
+    url(r'^ajax_get_user_profile_json', ajax_get_user_profile_json, name='ajax_get_user_profile_json')
 ]
+

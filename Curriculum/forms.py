@@ -1,9 +1,14 @@
 from django.forms import ModelForm
 from django import forms
+from dal import autocomplete
 from Curriculum.models import Batch, Department, Regulation
+from Accounts.views.utils import getActiveDepartments
 
 
 class BatchForm(ModelForm):
+    department = forms.ModelChoiceField(
+        queryset=getActiveDepartments(),
+        widget=autocomplete.ModelSelect2())
 
     def clean_department(self):
         department = self.cleaned_data.get('department')
@@ -36,3 +41,4 @@ class BatchForm(ModelForm):
     class Meta:
         model = Batch
         fields = '__all__'
+        exclude = ['in_active']

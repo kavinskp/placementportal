@@ -6,11 +6,13 @@
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 0 10px 0;
+            align-content: initial;
         }
     </style>
 {% endblock %}
 {% block rightPanel %}
-    <div class="row">
+
+    <div class="table-container row">
         {% if notification %}
             <div class="col-sm-2"></div>
             <div class="col-sm-10 alert alert-success">
@@ -20,24 +22,33 @@
                 {% endfor %}
             </div>
         {% endif %}
-
         <div class="col-sm-12">
-            {% if unapproved_users_list %}
-                <div class="table-container">
-                    <h2>New Users</h2>
-                    <br/>
-                    <br/>
+            <div class="table-container">
+                <h2>New Users</h2>
+                <br/>
+                <br/>
+                {% if unapproved_users_list %}
                     <form method="POST" class="form-inline">{% csrf_token %}
+
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table" id="bootstrapdatatable">
                                 <thead>
                                 <tr>
                                     <th>#</th>
                                     <th>Name</th>
                                     <th>Email</th>
-                                    <th>Designation</th>
-                                    <th>Department</th>
-                                    <th>Id</th>
+                                    {% if approval_type == 'Staff' %}
+                                        <th>Id</th>
+                                        <th>Designation</th>
+                                        <th>Department</th>
+                                    {% elif approval_type == 'Student' %}
+                                        <th>Id</th>
+                                        <th>Batch</th>
+                                        <th>Department</th>
+                                    {% elif approval_type == 'Interviewer' %}
+                                        <th>Company</th>
+                                        <th>Info</th>
+                                    {% endif %}
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -48,34 +59,45 @@
                                                    value="{{ user_i.user }}">
                                             {{ forloop.counter }}
                                         </td>
-                                        <td>{{ user_i.user.profile.full_name }}</td>
-                                        <td>{{ user_i.email }}</td>
+                                        <td>{{ user_i.full_name }}</td>
+                                        <td>{{ user_i.user.email }}</td>
                                         {% if user_i.user.get_user_type_display == 'Staff' %}
+                                            <td>{{ user_i.get_id }}</td>
                                             <td>{{ user_i.get_designation_display }}</td>
-                                        {% else %}
-                                            <td>Student</td>
-                                        {% endif %}
-                                        {% if user_i.user.get_user_type_display == 'Staff' %}
                                             <td>{{ user_i.department }}</td>
-                                        {% else %}
+                                        {% elif user_i.user.get_user_type_display == 'Student' %}
+                                            <td>{{ user_i.get_id }}</td>
+                                            <td>{{ user_i.batch.regulation }}
+                                                {% if user_i.batch.in_active %}
+                                                    <span><i class="bi bi-x" style="color: red"></i></span>
+                                                {% endif %}
+                                            </td>
                                             <td>{{ user_i.info.department }}</td>
-                                        {% endif %}
-                                        {% if user_i.user.get_user_type_display == 'Staff' %}
-                                            <td>{{ user_i.staff_id }}</td>
-                                        {% else %}
-                                            <td>{{ user_i.info.roll_no }}</td>
+                                        {% elif user_i.user.get_user_type_display == 'Interviewer' %}
+                                            <td>{{ user_i.company_info }}</td>
+                                            <td>
+                                                <button class="btn btn-primary" type="button" data-toggle="modal"
+                                                        data-target="#view_roles_{{ user_i.interview.pk }}">
+                                                    <i class="bi bi-eye-fill"></i>
+                                                </button>
+                                                {% with interview=user_i.interview %}
+                                                    {% include "company_interview_info_modal.html" %}
+                                                {% endwith %}
+                                            </td>
                                         {% endif %}
                                     </tr>
                                 {% endfor %}
                                 </tbody>
                             </table>
                         </div>
+
                         <hr/>
                         <br/>
                         <div class="row" style="padding: 10px">
                             <div class="col-sm-2"></div>
                             <div class="col-sm-3">
-                                <button type="submit" name="approve" class="btn btn-success">Approve</button>
+                                <button type="submit" name="approve" class="btn btn-success">Approve
+                                </button>
                             </div>
                             <div class="col-sm-2"></div>
                             <div class="col-sm-3">
@@ -83,33 +105,40 @@
                             </div>
                             <div class="col-sm-2"></div>
                         </div>
-
                     </form>
-                </div>
-            {% else %}
-                <div class="table-container">
-                    <h3>No new users needed Approval</h3>
-                </div>
-            {% endif %}
-
+                {% else %}
+                    <hr/>
+                    <h6>No new years needed approval !!!</h6>{% endif %}
+            </div>
         </div>
+
+
         <div class="col-sm-12">
-            {% if approved_users_list %}
-                <div class="table-container">
-                    <h2>Existing Users</h2>
-                    <br/>
-                    <br/>
+            <div class="table-container">
+                <h2>Existing Users</h2>
+                <br/>
+                <br/>
+                {% if approved_users_list %}
                     <form method="POST" class="form-inline">{% csrf_token %}
                         <div class="table-responsive">
-                            <table class="table">
+                            <table id="bootstrapdatatable1" class="table">
                                 <thead>
                                 <tr>
                                     <th>#</th>
                                     <th>Name</th>
                                     <th>Email</th>
-                                    <th>Designation</th>
-                                    <th>Department</th>
-                                    <th>Id</th>
+                                    {% if approval_type == 'Staff' %}
+                                        <th>Id</th>
+                                        <th>Designation</th>
+                                        <th>Department</th>
+                                    {% elif approval_type == 'Student' %}
+                                        <th>Id</th>
+                                        <th>Batch</th>
+                                        <th>Department</th>
+                                    {% elif approval_type == 'Interviewer' %}
+                                        <th>Company</th>
+                                        <th>Info</th>
+                                    {% endif %}
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -121,17 +150,30 @@
                                             {{ forloop.counter }}
                                         </td>
                                         <td>{{ user_i.full_name }}</td>
-                                        <td>{{ user_i.email }}</td>
+                                        <td>{{ user_i.user.email }}</td>
                                         {% if user_i.user.get_user_type_display == 'Staff' %}
+                                            <td>{{ user_i.get_id }}</td>
                                             <td>{{ user_i.get_designation_display }}</td>
-                                        {% else %}
-                                            <td>Student</td>
-                                        {% endif %}
-                                        <td>{{ user_i.department }}</td>
-                                        {% if user_i.user.get_user_type_display == 'Staff' %}
-                                            <td>{{ user_i.staff_id }}</td>
-                                        {% else %}
-                                            <td>{{ user_i.roll_no }}</td>
+                                            <td>{{ user_i.department }}</td>
+                                        {% elif user_i.user.get_user_type_display == 'Student' %}
+                                            <td>{{ user_i.get_id }}</td>
+                                            <td>{{ user_i.batch.regulation }}
+                                                {% if user_i.batch.in_active %}
+                                                    <span><i class="bi bi-x" style="color: red"></i></span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ user_i.info.department }}</td>
+                                        {% elif user_i.user.get_user_type_display == 'Interviewer' %}
+                                            <td>{{ user_i.company_info }}</td>
+                                            <td>
+                                                <button class="btn btn-primary" type="button" data-toggle="modal"
+                                                        data-target="#view_roles_{{ user_i.interview.pk }}">
+                                                    <i class="bi bi-eye-fill"></i>
+                                                </button>
+                                                {% with interview=user_i.interview %}
+                                                    {% include "company_interview_info_modal.html" %}
+                                                {% endwith %}
+                                            </td>
                                         {% endif %}
                                     </tr>
                                 {% endfor %}
@@ -148,9 +190,9 @@
                             <div class="col-sm-7"></div>
                         </div>
                     </form>
-                </div>
-            {% endif %}
+                {% else %}
+                    <hr/><h6>No users approved yet !!!</h6>{% endif %}
+            </div>
         </div>
     </div>
-
 {% endblock %}

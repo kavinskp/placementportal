@@ -13,7 +13,7 @@ class Regulation(models.Model):
     PROGRAMME_CHOICES = (
         ('UG', 'Under Graduate'),
         ('PG', 'Post Graduate'),
-        ('Phd', 'Doctrate of Philosophy'),
+        ('Phd', 'Doctorate of Philosophy'),
     )
     start_year = models.SmallIntegerField()
     end_year = models.SmallIntegerField(null=True)
@@ -36,9 +36,10 @@ class Batch(models.Model):
     regulation = models.ForeignKey(Regulation, on_delete=models.CASCADE)
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
     current_semester = models.SmallIntegerField(default=0)
+    in_active = models.BooleanField(default=False)
 
     def __str__(self):
-        return str(self.regulation)
+        return str(self.regulation) + ' ' + self.department.name
 
     class Meta:
         unique_together = ('regulation', 'department')
@@ -46,9 +47,8 @@ class Batch(models.Model):
 
 class StudentInfo(models.Model):
     roll_no = models.CharField(unique=True, max_length=7)
-    department = models.ForeignKey(Department, on_delete=models.CASCADE, verbose_name='Department')
-    is_hosteler = models.BooleanField(null=False)
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE)
+    is_hosteler = models.BooleanField(null=False)
     cgpa = models.FloatField(default=0.0)
     current_backlogs = models.SmallIntegerField(default=0)
     history_of_backlog = models.SmallIntegerField(default=0)
@@ -60,7 +60,11 @@ class StudentInfo(models.Model):
     class Meta:
         ordering = ['roll_no']
 
-    def current_Semester(self):
+    @property
+    def department(self):
+        return self.batch.department
+
+    def get_current_semester(self):
         return self.batch.current_semester
 
 

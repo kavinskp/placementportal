@@ -12,21 +12,13 @@
 {% block rightPanel %}
 
     <div class="table-container">
-        {% if alert_msg %}
-            <div class="alert alert-success">
-                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                {% for msg in  alert_msg %}
-                    <strong>{{ msg }}<br/></strong>
-                {% endfor %}
-            </div>
-        {% endif %}
 
-        <h2 class="text-center">Placement Representative Details {% if batch_str %} for {{ batch_str }} {% endif %}</h2>
+        <h2 class="text-center">Placement Representative Details </h2>
 
 
         <hr class="my-3"/>
         <div>
-            <table class="table table-bordered table-striped">
+            <table id="bootstrapdatatable" class="table table-bordered table-striped w-auto">
                 <thead>
                 <tr>
                     <th>#</th>
@@ -44,7 +36,7 @@
                         <td>{{ each.full_name }}</td>
                         <td>{{ each.batch }}</td>
                         <td>{{ each.department }}</td>
-                        <td>{{ each.email }}</td>
+                        <td>{{ each.user.email }}</td>
                         <td>{{ each.user.profile.phone_number |default_if_none:"" }}</td>
                     </tr>
                 {% endfor %}

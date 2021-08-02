@@ -3,9 +3,8 @@ from Curriculum.views import *
 
 urlpatterns = [
     url(r'^batches/', view_batches, name='view_batches'),
-    url(r'^un_assign_hod/(?P<batch_id>[0-9]+)/', delete_batch, name='delete_batch'),
-    url(r'^hods/', list_hods, name='list_hods_info'),
-    url(r'^assign_hod/', assign_hod, name='assign_hod'),
+    url(r'^delete_batch/(?P<batch_id>[0-9]+)/', delete_batch, name='delete_batch'),
+    url(r'^hods/', view_hods, name='view_hods'),
     url(r'^un_assign_hod/(?P<staff_id>[0-9]+)/', un_assign_hod, name='un_assign_hod'),
     url(r'^ajax/load_faculties/', load_faculties, name='ajax_load_faculties'),
     url(r'^ajax/load_staffs/', load_staffs, name='ajax_load_staffs'),

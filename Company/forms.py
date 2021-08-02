@@ -1,11 +1,15 @@
 from django.forms import ModelForm
 from django import forms
-from .models import Company, HRContactInfo
-from django.forms.widgets import TextInput, RadioSelect
+from django.forms.widgets import RadioSelect
+
+from dal import autocomplete
+
+from Company.models import CompanyInfo, HRContactInfo, CompanyInterview, Criteria, JobRoles
+from Accounts.views.utils import getInterviewAllowedBatches
 import re
 
 
-class CreateCompanyInfo(ModelForm):
+class CompanyInfoForm(ModelForm):
     name = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Company Short Name'}))
     fullName = forms.CharField(
@@ -17,11 +21,11 @@ class CreateCompanyInfo(ModelForm):
                                  attrs={'class': 'form-control', 'placeholder': 'Home Page URL'}))
 
     class Meta:
-        model = Company
+        model = CompanyInfo
         fields = ['name', 'fullName', 'website', 'type', 'logo', 'description']
 
 
-class CreateHRContactInfo(ModelForm):
+class HRContactInfoForm(ModelForm):
     first_name = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First name'}))
     middle_name = forms.CharField(required=False,
@@ -41,7 +45,7 @@ class CreateHRContactInfo(ModelForm):
     def clean_phoneNumber(self):
         phoneno = self.cleaned_data.get('phoneNumber')
         if self.cleaned_data.get('preferred_contact') == 2:
-            if phoneno is None or phoneno is "":
+            if phoneno is None or phoneno == "":
                 raise forms.ValidationError("Preferred contact cannot be Empty!")
             if not re.match(r'^\+?1?\d{10,15}$', phoneno):
                 raise forms.ValidationError("Phone number should have 10-15 characters")
@@ -50,4 +54,24 @@ class CreateHRContactInfo(ModelForm):
     class Meta:
         model = HRContactInfo
         fields = '__all__'
-        exclude = ('company', '')
+        exclude = ['company']
+
+
+class RoleInfoForm(ModelForm):
+
+    class Meta:
+        model = JobRoles
+        fields = '__all__'
+        exclude = ['company']
+
+
+class JobCriteriaForm(ModelForm):
+    batch = forms.ModelMultipleChoiceField(
+        queryset=getInterviewAllowedBatches(),
+        widget=autocomplete.ModelSelect2Multiple()
+    )
+
+    class Meta:
+        model = Criteria
+        fields = '__all__'
+        exclude = ['company']

@@ -12,14 +12,6 @@
 {% block rightPanel %}
 
     <div class="table-container">
-        {% if alert_msg %}
-            <div class="alert alert-success">
-                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                {% for msg in  alert_msg %}
-                    <strong>{{ msg }}<br/></strong>
-                {% endfor %}
-            </div>
-        {% endif %}
 
         <h2 class="text-center">Placement Officer Details</h2>
 
@@ -34,7 +26,7 @@
                     <th>Staff Id</th>
                     <th>Email</th>
                     <th>Phone number</th>
-                    {% if perms.Accounts.can_assign_po %}
+                    {% if perms.Curriculum.can_assign_po %}
                         <th></th>
                     {% endif %}
                 </tr>
@@ -46,9 +38,9 @@
                         <td>{{ each.department }}</td>
                         <td>{{ each.full_name }}</td>
                         <td>{{ each.staff_id }}</td>
-                        <td>{{ each.email }}</td>
+                        <td>{{ each.user.email }}</td>
                         <td>{{ each.user.profile.phone_number |default_if_none:"" }}</td>
-                        {% if perms.Accounts.can_assign_po %}
+                        {% if perms.Curriculum.can_assign_po %}
                             <td><a href="{% url 'un_assign_po' staff_id=each.staff_id %}">
                                 <button type="button" class="btn btn-danger">Un Assign</button>
                             </a></td>
@@ -57,7 +49,7 @@
                 {% endfor %}
             </table>
         </div>
-        {% if perms.Accounts.can_assign_po %}
+        {% if perms.Curriculum.can_assign_po %}
             <br/>
             <br/>
             <h2 class="text-center">Assign Placement Officer</h2>
@@ -94,7 +86,7 @@
                     <div class="row">
                         <div class="col-sm-4"></div>
                         <div class="col-sm-8">
-                            <button type="submit" class="btn btn-primary btn-success">Assign as PD</button>
+                            <button type="submit" class="btn btn-primary btn-success">Assign as PO</button>
                         </div>
                     </div>
                 </form>

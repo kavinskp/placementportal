@@ -1,0 +1,331 @@
+{% extends 'index.html' %}
+{% block title %}Add Job Info{% endblock %}
+{% block body_style %}
+{% endblock %}
+{% block body %}{% endblock %}
+{% block form_content2 %}
+    <div class="box-section">
+        {% if messages %}
+            <div class="alert">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                {% for msg in  messages %}
+                    <strong>{{ msg }}<br/></strong>
+                {% endfor %}
+            </div>
+        {% endif %}
+        <h2 class="text-center" style="color: blueviolet">{{ title }}</h2>
+        <input type="hidden" name="form_type" value="{{ form_type }}">
+        <hr class="my-3"/>
+        <br/>
+        <div class="form-group">
+            <input type="hidden" name="company_id" id="company_id" value="{{ company_id }}">
+
+            {% if existing_criteria %}
+                <div class="row">
+                    <h4 class="text-center">Existing Criteria</h4>
+                    <table class="table table-active">
+                        <thead>
+                        <tr>
+                            <th>Criteria Name</th>
+                            <th>Batch</th>
+                            <th>CGPA</th>
+                            <th>GPA</th>
+                            <th>Existing</th>
+                            <th>History</th>
+                            <th>10th %</th>
+                            <th>12th %</th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for criteria in existing_criteria %}
+                            <tr>
+                                <td style="font-style: italic;"><b>{{ criteria.name }}</b></td>
+                                <td>
+                                    <button type="button" class="btn btn-outline-success " data-toggle="modal"
+                                            data-target="#criteria_batch_{{ criteria.pk }}">
+                                        # {{ criteria.get_allowed_batches | length }}
+
+                                        <i class="bi bi-eye-fill"></i>
+                                    </button>
+
+                                    <div class="modal fade" id="criteria_batch_{{ criteria.pk }}" tabindex="-1"
+                                         role="dialog"
+                                         aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-body">
+                                                    <ul style="list-style: none">
+                                                        {% for batch in criteria.get_allowed_batches %}
+                                                            <li>{{ batch }}</li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ criteria.get_required_cgpa|default_if_none:"" }}</td>
+                                <td>{{ criteria.get_required_gpa|default_if_none:"" }}</td>
+                                <td>{{ criteria.history | default_if_none:"" }}</td>
+                                <td>{{ criteria.current | default_if_none:"" }}</td>
+                                <td>{{ criteria.get_required_10th_percentage|default_if_none:"" }}</td>
+                                <td>{{ criteria.get_required_12th_percentage|default_if_none:"" }}</td>
+                                <td>
+                                    <a class="btn btn-outline-danger" target="_blank"
+                                       href="{% url 'edit_criteria' company_id criteria.pk %}"><i
+                                            class="bi bi-pencil"></i></a>
+                                </td>
+                                <td>
+                                    <a class="btn btn-danger" target="_blank"
+                                       href="{% url 'delete_criteria' company_id criteria.pk %}"><i
+                                            class="bi bi-trash"></i></a>
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+
+            <div class="row" id="create_criteria_btn_div">
+                <div class="col-sm-4">Create Criteria</div>
+                <div class="col-sm-8">
+                    <button type="button" class="btn btn-primary btn-dark" id="create_criteria_btn">
+                        Add
+                    </button>
+                </div>
+                <br/>
+            </div>
+            <div class="row" id="create_criteria_div">
+                <br/>
+                <h4 class="text-center">Add Criteria</h4>
+                <hr/>
+                <form name="create_criteria_form" method="post" action="{% url 'create_roles' company_id %}">
+                    {% csrf_token %}
+                    {% for field in create_criteria_form %}
+                        <div class="row">
+                            <div class="col-sm-3 text-sm-end">
+                                {{ field.label_tag }}
+                                {% if field.required %}
+                                    <span class="required" style="color: red">*</span>
+                                {% endif %}
+                            </div>
+                            <div class="col-sm-8">
+                                {{ field }}
+                            </div>
+                            {% for error in field.errors %}
+                                <small style="color: red">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    <div class="row">
+                        <div class="col-sm-4"></div>
+                        <div class="col-sm-8">
+                            <button type="button" class="btn btn-secondary" id="create_criteria_close_btn">
+                                Close
+                            </button>
+                            <button name="create_criteria" class="btn btn-primary"
+                                    onclick="$('#create_criteria_form').submit()">
+                                Create Criteria
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <br/>
+            <hr/>
+
+            {% if existing_roles %}
+                {% for role in existing_roles %}
+                    <div class="row" id="view_role_{{ role.pk }}">
+                        <div class="col-sm-10">
+                            <table class="table table-light">
+                                <thead>
+                                <th>Role Name</th>
+                                <th>{{ role.role_name }}</th>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>Job Type</td>
+                                    <td>{{ role.get_type_display }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Vacancy</td>
+                                    <td>{{ role.vacancy| default_if_none:"" }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Location</td>
+                                    <td>{{ role.location| default_if_none:"" }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Package</td>
+                                    <td>{{ role.package }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Salary Description</td>
+                                    <td>{{ role.salary_description | default_if_none:"" }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Bond Info</td>
+                                    <td>{{ role.bond_description | default_if_none:"" }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Criteria</td>
+                                    <td>{{ role.get_criteria | default_if_none:"" }}</td>
+                                </tr>
+                                {% if role.documents %}
+                                    <tr>
+                                        <td>Additional Info</td>
+                                        <td>
+                                            {% load static %}
+                                            <a target="_blank"
+                                               href="/media/{{ role.documents }}">View</a>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-sm-2">
+                            <div class="row">
+                                <a class="btn btn-outline-danger" target="_blank"
+                                   href="{% url 'update_roles' company_id role.pk %}">Edit</a>
+                            </div>
+                            <br/>
+                            <div class="row">
+                                <a class="btn btn-danger" target="_blank"
+                                   href="{% url 'delete_role' company_id role.pk %}">Delete</a>
+                            </div>
+                        </div>
+                    </div>
+                    <hr/>
+                {% endfor %}
+            {% endif %}
+
+            <div class="row" id="create_role_btn_div">
+                <div class="col-sm-4">Create New Role Here</div>
+                <div class="col-sm-8">
+                    <button type="button" class="btn btn-primary btn-dark" id="create_role_btn">
+                        Add New Role
+                    </button>
+                </div>
+            </div>
+            <div class="row" id="create_role_div">
+                <form name="create_role_form" enctype="multipart/form-data" method="post"
+                      action="{% url 'create_roles' company_id %}">
+                    {% csrf_token %}
+                    {% for field in create_role_form %}
+                        <div class="row">
+                            <div class="col-sm-4 text-sm-end">
+                                {{ field.label_tag }}
+                                {% if field.required %}
+                                    <span class="required" style="color: red">*</span>
+                                {% endif %}
+                            </div>
+                            <div class="col-sm-2">
+                                {{ field }}
+                            </div>
+                            {% for error in field.errors %}
+                                <small style="color: red">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    <div class="row">
+                        <div class="col-sm-4 text-sm-end">
+                            <label for="criteria_options">Criteria <span class="required"
+                                                                         style="color: red">*</span>
+                            </label>
+                        </div>
+                        <div class="col-sm-2">
+                            <select name="criteria" class="form-select" id="criteria_options" required>
+                                <option>-------</option>
+                            </select>
+                        </div>
+                    </div>
+                    <br/>
+                    <div class="row">
+                        <div class="col-sm-4"></div>
+                        <div class="col-sm-8">
+                            <button type="button" class="btn btn-secondary" id="create_new_role_close_btn">
+                                Close
+                            </button>
+                            <button name="create_role" class="btn btn-primary"
+                                    onclick="$('#create_role_form').submit()">
+                                Create Role
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <br/>
+        <hr/>
+        <br/>
+        <div class="row">
+            <div class="col-sm-4">Save Roles Information</div>
+            <div class="col-sm-8">
+                <form name="save_roles_form" method="post" action="{% url 'create_roles' company_id %}">
+                    {% csrf_token %}
+                    <button name="complete" class="btn btn-success"
+                            onclick="$('#save_roles_form').submit()">
+                        Complete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade border-danger" id="AlertErrorModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <p id="alert_content"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+{% block scripts %}
+    <script>
+        $(window).on('load', function () {
+            $('#create_role_div').hide();
+            $('#create_criteria_div').hide();
+        });
+        $('#create_criteria_btn').click(function () {
+            $('#create_criteria_div').show();
+            $('#create_criteria_btn_div').hide();
+        });
+        $('#create_criteria_close_btn').click(function () {
+            $('#create_criteria_div').hide();
+            $('#create_criteria_btn_div').show();
+        });
+        $('#create_role_btn').click(function () {
+            {% if existing_criteria %}
+                $('#create_role_div').show();
+                $('#create_role_btn_div').hide();
+                $.ajax({
+                    url: "{% url 'ajax_get_criteria_for_company' %}",
+                    data: {
+                        'company_id':{{ company_id }}
+                    },
+                    success: function (data) {
+                        $("#criteria_options").html(data);
+                    }
+                });
+            {% else %}
+                $('#alert_content').html("Please create atleaset one criteria!");
+                $('#AlertErrorModal').modal('show');
+            {% endif %}
+        });
+        $('#create_new_role_close_btn').click(function () {
+            $('#create_role_div').hide();
+            $('#create_role_btn_div').show();
+        });
+    </script>
+{% endblock %}

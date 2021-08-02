@@ -12,16 +12,8 @@
 {% block rightPanel %}
 
     <div class="table-container">
-        {% if alert_msg %}
-            <div class="alert alert-success">
-                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                {% for msg in  alert_msg %}
-                    <strong>{{ msg }}<br/></strong>
-                {% endfor %}
-            </div>
-        {% endif %}
 
-        <h2 class="text-center">Placement Representative Details</h2>
+        <h2 class="text-center">Placement Representative - Department {{ dep_name }}</h2>
 
         <hr class="my-3"/>
         <div>
@@ -34,7 +26,7 @@
                     <th>Roll No</th>
                     <th>Email</th>
                     <th>Phone number</th>
-                    {% if perms.Accounts.can_assign_pr %}
+                    {% if perms.Curriculum.can_assign_pr %}
                         <th></th>
                     {% endif %}
                 </tr>
@@ -46,9 +38,9 @@
                         <td>{{ each.full_name }}</td>
                         <td>{{ each.info.batch }}</td>
                         <td>{{ each.roll_no }}</td>
-                        <td>{{ each.email }}</td>
+                        <td>{{ each.user.email }}</td>
                         <td>{{ each.user.profile.phone_number |default_if_none:"" }}</td>
-                        {% if perms.Accounts.can_assign_pr %}
+                        {% if perms.Curriculum.can_assign_pr %}
                             <td><a href="{% url 'un_assign_pr' roll_no=each.roll_no %}">
                                 <button type="button" class="btn btn-danger">Un Assign</button>
                             </a></td>
@@ -57,50 +49,53 @@
                 {% endfor %}
             </table>
         </div>
-        {% if perms.Accounts.can_assign_pr %}
-            <br/>
-            <br/>
-            <h2 class="text-center">Assign Placement Representative</h2>
-            <hr class="my-3"/>
+        {% if perms.Curriculum.can_assign_pr %}
+            {% if batches %}
 
-            <div class="container">
-                <form method="post" id="allotPRForm"
-                      data-content-url="{% url 'ajax_load_students_for_given_dep_batch' %}">
-                    {% csrf_token %}
-                    <input type="text" name="dep_name" value="{{ dep_name }}" hidden/>
-                    <div class="row">
-                        <div class="col-sm-4">
-                            <label for="batch" class="form-label">Batch</label>
+                <br/>
+                <br/>
+                <h2 class="text-center">Assign Placement Representative</h2>
+                <hr class="my-3"/>
+
+                <div class="container">
+                    <form method="post" id="allotPRForm"
+                          data-content-url="{% url 'ajax_load_students_for_given_dep_batch' %}">
+                        {% csrf_token %}
+                        <input type="text" name="dep_name" value="{{ dep_name }}" hidden/>
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <label for="batch" class="form-label">Batch</label>
+                            </div>
+                            <div class="col-sm-8">
+                                <select class="form-select" id="batch" name="batch_id">
+                                    <option value="" disabled selected>-----</option>
+                                    {% for batch in batches %}
+                                        <option value="{{ batch.pk }}">{{ batch }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                         </div>
-                        <div class="col-sm-8">
-                            <select class="form-select" id="batch" name="dep_name">
-                                <option value="" disabled selected>-----</option>
-                                {% for batch in batches %}
-                                    <option value="{{ batch.pk }}">{{ batch.get_batch_display }}</option>
-                                {% endfor %}
-                            </select>
+                        <br/>
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <label for="students_filed" class="form-label">Students</label>
+                            </div>
+                            <div class="col-sm-8">
+                                <select class="form-select" id="students_filed" name="roll_no">
+                                    <option value="" disabled selected>----</option>
+                                </select>
+                            </div>
                         </div>
-                    </div>
-                    <br/>
-                    <div class="row">
-                        <div class="col-sm-4">
-                            <label for="students_filed" class="form-label">Students</label>
+                        <br/>
+                        <div class="row">
+                            <div class="col-sm-4"></div>
+                            <div class="col-sm-8">
+                                <button type="submit" class="btn btn-primary btn-success">Assign as PR</button>
+                            </div>
                         </div>
-                        <div class="col-sm-8">
-                            <select class="form-select" id="students_filed" name="roll_no">
-                                <option value="" disabled selected>----</option>
-                            </select>
-                        </div>
-                    </div>
-                    <br/>
-                    <div class="row">
-                        <div class="col-sm-4"></div>
-                        <div class="col-sm-8">
-                            <button type="submit" class="btn btn-primary btn-success">Assign as PR</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
+                    </form>
+                </div>
+            {% endif %}
         {% endif %}
     </div>
 

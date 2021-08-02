@@ -1,7 +1,6 @@
-from Accounts.models import CustomUser
+from Accounts.models import CustomUser, UserType
 
-email = 'admin@test.com'
-password = 'Admin#1234'
+admin_email = 'admin@test.com'
+admin_password = 'Admin#1234'
 
-p_user = CustomUser.objects.create_superuser(email=email, password=password)
-print('Admin Created')
+CustomUser.objects.create_superuser(email=admin_email, password=admin_password)
