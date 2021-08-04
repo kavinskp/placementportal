@@ -1,0 +1,37 @@
+{% extends 'index.html' %}
+{% block title %}
+    Verify Email
+{% endblock %}
+{% block body_style %}
+{% endblock %}
+{% block body %}{% endblock %}
+{% block form_content2 %}
+    <div class="col-md-10 col-md-offset-1">
+        <div class="text-center text-center">
+            <div class="container">
+                {% if activation_expired %}
+                    <h1>Oops</h1>
+                    <h2>Activation link expired</h2>
+                    <div class="center-block">
+                        <p>
+                            <a class="btn btn-primary btn-lg " href={% url 'new_activation_link' user_id=id_user %}>Resend
+                                Email</a>
+                        </p>
+                    </div>
+                {% endif %}
+                {% if already_active %}
+                    <h2>Your account has been already activated</h2>
+                {% endif %}
+                {% if not activation_expired and not already_active %}
+                    <h2>Your account has been activated. Please login to continue</h2>
+                {% endif %}
+                <div class="center-block">
+                    <p>
+                        <a id="login" class="btn btn-primary btn-lg " href={% url 'login' %}>Login</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

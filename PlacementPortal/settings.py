@@ -23,6 +23,7 @@ SECRET_KEY = '_wih2(72-$yjk$n09o)6y%15w55+jt6*n@!h#vg5*at3d0957q'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+EMAIL_VERIFICATION = True
 
 ALLOWED_HOSTS = []
 
@@ -130,8 +131,8 @@ LOGIN_REDIRECT_URL = '/'
 
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.google.com'
-EMAIL_PORT = 25
+EMAIL_PORT = 587
 EMAIL_HOST_USER = 'mailer.placementportal@gmail.com'
-EMAIL_HOST_PASSWORD = 'Admin#1234'
+EMAIL_HOST_PASSWORD = 'phdwepixrxtxptuv'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 CURRENT_HOST_NAME = 'http://127.0.0.1:8000/'

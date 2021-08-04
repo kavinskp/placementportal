@@ -3,8 +3,8 @@ import random
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import Group
-from django.http import HttpResponseRedirect,JsonResponse
-from django.shortcuts import render, redirect
+from django.http import HttpResponseRedirect, JsonResponse
+from django.shortcuts import render, redirect, Http404
 from django.utils import timezone
 from django.core import serializers
 import json
@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import login_required
 
 from Accounts.forms import *
 from Accounts.models import UserType, StaffAccount, StudentAccount, InterviewerAccount
-from Company.forms import CompanyInfoForm
+from PlacementPortal.settings import EMAIL_VERIFICATION
 
 # Create your views here.
 INTERVIEWER = 'Interviewer'
@@ -45,10 +45,10 @@ def signup(request):
                                                           activation_key=activation_key,
                                                           key_expires=key_expires,
                                                           )
-
-                    user.is_verified = True
-                    user.save()
-                    # form.sendEmail({'email': email, 'activation_key': activation_key})
+                    if EMAIL_VERIFICATION:
+                        form.sendEmail({'email': email, 'activation_key': activation_key})
+                    else:
+                        return redirect('activation', activation_key)
 
                     msg = {
                         'page_title': 'Placement | Signup success',
@@ -61,6 +61,62 @@ def signup(request):
                 except forms.ValidationError as error_msg:
                     error = [error_msg]
     return render(request, 'signup.html', {'form': form, 'error_msg': error})
+
+
+def activation(request, key):
+    activation_expired = False
+    already_active = False
+    try:
+        user = CustomUser.objects.get(activation_key=key)
+    except CustomUser.DoesNotExist:
+        msg = {
+            'page_title': 'Expired Link',
+            'title': 'Link Expired',
+            'description': 'Please check whether you using the latest link sent to your mail'
+        }
+        return render(request, 'prompt_pages.html', {'message': msg})
+
+    if user.is_verified == False:
+        if timezone.now() > user.key_expires:
+            activation_expired = True
+            id_user = user.id
+        else:
+            user.is_verified = True
+            user.save()
+
+    else:
+        already_active = True
+    return render(request, 'activate_account.html', locals())
+
+
+def new_activation_link(request, user_id):
+    form = SignupForm()
+    try:
+        user = CustomUser.objects.get(id=user_id)
+    except CustomUser.DoesNotExist:
+        raise Http404
+    if user is not None and not user.is_verified:
+        random_num_str = str(random.random())
+        hash_val = random_num_str.encode('utf8')
+        hash_val = hashlib.sha1(hash_val).hexdigest()[:5]
+        hash_val = hash_val.encode('utf-8')
+        key = hashlib.sha1(hash_val + user.email.encode('utf-8'))
+        activation_key = key.hexdigest()
+        key_expires = timezone.now() + timezone.timedelta(days=2)
+
+        user.activation_key = activation_key
+        user.key_expires = key_expires
+        user.save()
+
+        form.sendEmail({'email': user.email, 'activation_key': key})
+    msg = {
+        'page_title': 'Placement | Signup success',
+        'title': 'Signup - Success',
+        'description': ["Please Verify Email-ID.",
+                        "An email has been sent your mail ID.",
+                        "Please verify it to proceed"]
+    }
+    return render(request, 'prompt_pages.html', {'message': msg})
 
 
 def login_user(request):
