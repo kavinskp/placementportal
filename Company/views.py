@@ -1,13 +1,13 @@
 from django import forms
 from django.contrib import messages
-from django.db import IntegrityError
 from django.http import FileResponse
 from django.shortcuts import render, redirect
 
-from Accounts.models import CustomUser, InterviewerAccount
-from Curriculum.models import Batch
+from Accounts.models import InterviewerAccount
+from Accounts.views.utils import create_interviewer_account
 from .forms import CompanyInfoForm, HRContactInfoForm, RoleInfoForm, JobCriteriaForm
-from .models import CompanyInfo, JobRoles, HRContactInfo, Criteria, InterviewJobs, CompanyInterview
+from .models import CompanyInfo, CompanyJob, HRContactInfo, Criteria
+from Curriculum.models import Batch
 
 
 def get_context(title, form, form_type, error, alert=None):
@@ -76,7 +76,7 @@ def create_roles(request, company_id):
     curr_form = JOB_INFO
     form = None
     company_info = CompanyInfo.objects.get(pk=company_id)
-    create_role_form = RoleInfoForm()
+    create_role_form = RoleInfoForm(company_id=company_id)
     create_criteria_form = JobCriteriaForm()
     title = 'Job Details'
     if request.method == 'POST':
@@ -92,48 +92,24 @@ def create_roles(request, company_id):
                         criteria.batch.add(Batch.objects.get(id=batch_id))
 
             if 'create_role' in request.POST:
-                create_role_form = RoleInfoForm(request.POST, request.FILES)
+                create_role_form = RoleInfoForm(request.POST, request.FILES, company_id=company_id)
                 if create_role_form.is_valid():
                     role_obj = create_role_form.save(commit=False)
                     role_obj.company = company_info
                     role_obj.save()
-                    criteria_id = request.POST['criteria']
-                    InterviewJobs.objects.create(role=role_obj, criteria_id=criteria_id)
             if 'complete' in request.POST:
-                if not InterviewJobs.objects.filter(role__company=company_info).exists():
+                if not CompanyJob.objects.filter(company=company_info).exists():
                     error = ["At least one job role must be defined !"]
                 else:
-                    if not CompanyInterview.objects.filter(info=company_info).exists():
-                        CompanyInterview.objects.create(info=company_info)
-                    company_int = CompanyInterview.objects.get(info=company_info)
-                    roles = JobRoles.objects.filter(company=company_info)
-                    for role in roles:
-                        job = InterviewJobs.objects.get(role=role)
-                        company_int.job.add(job)
-                    if 'user_name' in request.session:
-                        user_name = request.session.get('user_name')
-                        user_obj = CustomUser.objects.get(email=user_name)
-                        if not InterviewerAccount.objects.filter(user=user_obj).exists():
-                            InterviewerAccount.objects.create(InterviewerAccount)
-                        interview_acc = InterviewerAccount.objects.get(user=user_obj)
-                        interview_acc.interview = company_int
-                        interview_acc.company_info = company_info
-                        interview_acc.save()
-                        user_obj.account_created = True
-                        user_obj.save()
-
-                        msg = {
-                            'page_title': 'Placement | Update Success',
-                            'title': 'Profile updated SuccessFully',
-                            'description': ['Once account approved !! You can login!!']
-                        }
-                        return render(request, 'prompt_pages.html', {'message': msg})
-                    else:
-                        return redirect('login')
+                    msg = "Company Details saved !"
+                    messages.success(request, msg)
+                    if request.user.is_authenticated():
+                        return redirect('create_roles', company_id)
+                    return redirect('dashboard')
         except Exception as e:
             error = [str(e)]
     existing_criteria = Criteria.objects.filter(company_id=company_id)
-    existing_roles = JobRoles.objects.filter(company_id=company_id)
+    existing_roles = CompanyJob.objects.filter(company_id=company_id)
     context = get_context(title, form, curr_form, error)
     context.update({'company_id': company_id})
     context.update({'create_role_form': create_role_form})
@@ -145,19 +121,22 @@ def create_roles(request, company_id):
 
 def update_role(request, company_id, role_id):
     error = None
-    role = JobRoles.objects.get(pk=role_id)
+    role = CompanyJob.objects.get(pk=role_id)
     title = 'Update Role - ' + role.role_name
     if request.method == 'POST':
         try:
             if 'update_role' in request.POST:
-                form = RoleInfoForm(request.POST, request.FILES, instance=role)
+                form = RoleInfoForm(request.POST, request.FILES, instance=role, company_id=company_id)
                 if form.is_valid():
                     form.save()
                     msg = "Role " + str(role.role_name) + " saved !"
                     messages.success(request, msg)
+                    if request.user.is_authenticated():
+                        return redirect('create_roles', company_id)
+                    return redirect('dashboard')
         except Exception as e:
             error = [str(e)]
-    form = RoleInfoForm(instance=role)
+    form = RoleInfoForm(instance=role, company_id=company_id)
     return render(request, 'edit_role_info.html', {
         'form': form,
         'title': title,
@@ -175,7 +154,7 @@ def ajax_get_criteria_for_company(request):
 
 
 def delete_role(request, company_id, role_id):
-    JobRoles.objects.get(pk=role_id).delete()
+    CompanyJob.objects.get(pk=role_id).delete()
     return redirect('create_roles', company_id)
 
 
@@ -196,6 +175,9 @@ def edit_criteria(request, company_id, criteria_id):
                     form.save()
                     msg = "Role " + str(criteria.name) + " saved !"
                     messages.success(request, msg)
+                    if request.user.is_authenticated():
+                        return redirect('create_roles', company_id)
+                    return redirect('dashboard')
         except Exception as e:
             error = [str(e)]
     form = JobCriteriaForm(instance=criteria)
@@ -208,7 +190,7 @@ def edit_criteria(request, company_id, criteria_id):
 
 
 def preview_role_document(request, role_id):
-    role = JobRoles.objects.get(pk=role_id)
+    role = CompanyJob.objects.get(pk=role_id)
     return preview_document(role.documents, filename=role.documents)
 
 
@@ -249,10 +231,7 @@ def register_company(request):
                         interviewer_obj.company_info = company_info
                         interviewer_obj.save()
                     elif user_name:
-                        InterviewerAccount.objects.create(
-                            user=CustomUser.objects.get(email=user_name),
-                            company_info=company_info
-                        )
+                        create_interviewer_account(request.user, company_info)
                     return redirect('add_hr_info', company_id=company_info.pk)
                 else:
                     print(form.errors)
@@ -270,7 +249,15 @@ def register_company(request):
 
 def ajax_load_company_details(request):
     company_id = request.GET.get('company_id')
-    company_roles = JobRoles.objects.filter(company_id=company_id)
-    return render(request, 'company_interview_info_modal.html', {
-        'company_roles': company_roles
+    company_info = CompanyInfo.objects.get(pk=company_id)
+    jobs = CompanyJob.objects.filter(company_id=company_id)
+    return render(request, 'company_job_info.html', {
+        'company_info': company_info,
+        'jobs': jobs
     })
+
+
+def ajax_get_allowed_batches_for_job(request):
+    criteria_id = request.GET.get('job_id')
+    criteria = Criteria.objects.get(pk=criteria_id)
+    return criteria.get_allowed_batch_html()

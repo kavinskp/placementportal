@@ -1,0 +1,193 @@
+{% extends 'dashboard/content.html' %}
+{% block content %}
+    {% with active_menu="college" active_tab="view_regulations" %}
+        {{ block.super }}
+    {% endwith %}
+{% endblock %}
+{% block rightPanel %}
+    <div class="container-fluid p-2">
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                <div class="card">
+                    <div class="card-header fw-bold fs-4">
+                        Regulations
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped data-table">
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Programme</th>
+                                    <th>Programme Period</th>
+                                    <th>Start Year</th>
+                                    <th>End Year</th>
+                                    <th>Current Semester</th>
+                                    {% if perms.Curriculum.can_update_batches %}
+                                        <th></th>
+                                    {% endif %}
+
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for each in regulations %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ each.programme }}</td>
+                                        <td>{{ each.programme_period }}</td>
+                                        <td>{{ each.start_year }}</td>
+                                        <td>{{ each.get_end_year | default_if_none:"" }}</td>
+                                        <td>{{ each.current_semester }}</td>
+                                        {% if perms.Curriculum.can_update_batches %}
+                                            <td>
+                                                <a href="{% url 'delete_regulation' regulation_id=each.id %}">
+                                                    <button type="button" class="btn btn-danger"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top"
+                                                            title="Delete Regulation">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </a>
+                                            </td>
+                                        {% endif %}
+                                    </tr>
+                                {% endfor %}
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% if perms.Curriculum.can_update_batches %}
+            <div class="row">
+                <div class="col-sm-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header fw-bold fs-4">
+                            Create Regulation
+                        </div>
+                        <div class="card-body">
+                            <form method="post" enctype="multipart/form-data">
+                                <div>
+                                    {% csrf_token %}
+                                    {% for field in regulation_form %}
+                                        <div class="row">
+                                            <div class="col-sm-4 text-sm-end">{{ field.label_tag }}</div>
+                                            <div class="col-sm-8">{{ field }} <br/>
+                                                {% for error in field.errors %}
+                                                    <small style="color: red">{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <br/>
+                                    {% endfor %}
+                                    <div class="row">
+                                        <div class="col-sm-2"></div>
+                                        <div class="col-sm-10">
+                                            <button type="submit" name="create_regulation"
+                                                    class="btn btn-success">
+                                                Create
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 mb-3" id="update_regulation_div">
+                    <div class="card h-100">
+                        <div class="card-header fw-bold fs-4">
+                            Update Regulation
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="row mb-3">
+                                    <div class="col-sm-4"><label class="form-label"
+                                                                 for="update_regulation">Regulation</label></div>
+                                    <div class="col-sm-8">
+                                        <select class="form-select" name="regulation_id">
+                                            <option value="" selected disabled>------</option>
+                                            {% for each in regulations %}
+                                                <option value="{{ each.id }}">{{ each }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-sm-4"><label class="form-label"
+                                                                 for="current_semester">Current Semester</label></div>
+                                    <div class="col-sm-8">
+                                        <input type="number" class="form-control" min="0" id="current_semester"
+                                               name="current_semester" required/>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-4"></div>
+                                    <div class="col-sm-8">
+                                        <button class="btn btn-success" name="update_current_semester" type="submit">
+                                            Update
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% if inactive_regulations %}
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <div class="card">
+                            <div class="card-header fw-bold fs-4">
+                                Inactive Regulations
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped data-table">
+                                        <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Programme</th>
+                                            <th>Start Year</th>
+                                            <th>End Year</th>
+                                            <th>Programme Period</th>
+                                            {% if perms.Curriculum.can_update_batches %}
+                                                <th></th>
+                                            {% endif %}
+
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for each in inactive_regulations %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>{{ each.programme }}</td>
+                                                <td>{{ each.start_year }}</td>
+                                                <td>{{ each.get_end_year | default_if_none:"" }}</td>
+                                                <td>{{ each.programme_period }}</td>
+                                                {% if perms.Curriculum.can_update_batches %}
+                                                    <td>
+                                                        <a href="{% url 'delete_regulation' regulation_id=each.id %}">
+                                                            <button type="button" class="btn btn-danger"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    title="Delete Regulation">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </a>
+                                                    </td>
+                                                {% endif %}
+                                            </tr>
+                                        {% endfor %}
+
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+{% endblock %}

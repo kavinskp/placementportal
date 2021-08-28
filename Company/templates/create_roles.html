@@ -5,14 +5,6 @@
 {% block body %}{% endblock %}
 {% block form_content2 %}
     <div class="box-section">
-        {% if messages %}
-            <div class="alert">
-                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                {% for msg in  messages %}
-                    <strong>{{ msg }}<br/></strong>
-                {% endfor %}
-            </div>
-        {% endif %}
         <h2 class="text-center" style="color: blueviolet">{{ title }}</h2>
         <input type="hidden" name="form_type" value="{{ form_type }}">
         <hr class="my-3"/>
@@ -29,7 +21,6 @@
                             <th>Criteria Name</th>
                             <th>Batch</th>
                             <th>CGPA</th>
-                            <th>GPA</th>
                             <th>Existing</th>
                             <th>History</th>
                             <th>10th %</th>
@@ -67,13 +58,12 @@
                                     </div>
                                 </td>
                                 <td>{{ criteria.get_required_cgpa|default_if_none:"" }}</td>
-                                <td>{{ criteria.get_required_gpa|default_if_none:"" }}</td>
                                 <td>{{ criteria.history | default_if_none:"" }}</td>
                                 <td>{{ criteria.current | default_if_none:"" }}</td>
                                 <td>{{ criteria.get_required_10th_percentage|default_if_none:"" }}</td>
                                 <td>{{ criteria.get_required_12th_percentage|default_if_none:"" }}</td>
                                 <td>
-                                    <a class="btn btn-outline-danger" target="_blank"
+                                    <a class="btn btn-outline-secondary" target="_blank"
                                        href="{% url 'edit_criteria' company_id criteria.pk %}"><i
                                             class="bi bi-pencil"></i></a>
                                 </td>
@@ -106,10 +96,10 @@
                 <form name="create_criteria_form" method="post" action="{% url 'create_roles' company_id %}">
                     {% csrf_token %}
                     {% for field in create_criteria_form %}
-                        <div class="row">
+                        <div class="row m-2">
                             <div class="col-sm-3 text-sm-end">
                                 {{ field.label_tag }}
-                                {% if field.required %}
+                                {% if field.field.required %}
                                     <span class="required" style="color: red">*</span>
                                 {% endif %}
                             </div>
@@ -139,6 +129,7 @@
             <hr/>
 
             {% if existing_roles %}
+                <h4 class="text-center">Existing Roles</h4>
                 {% for role in existing_roles %}
                     <div class="row" id="view_role_{{ role.pk }}">
                         <div class="col-sm-10">
@@ -164,17 +155,21 @@
                                     <td>Package</td>
                                     <td>{{ role.package }}</td>
                                 </tr>
-                                <tr>
-                                    <td>Salary Description</td>
-                                    <td>{{ role.salary_description | default_if_none:"" }}</td>
-                                </tr>
-                                <tr>
-                                    <td>Bond Info</td>
-                                    <td>{{ role.bond_description | default_if_none:"" }}</td>
-                                </tr>
+                                {% if role.salary_description %}
+                                    <tr>
+                                        <td>Salary Description</td>
+                                        <td>{{ role.salary_description | default_if_none:"" }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if role.bond_description %}
+                                    <tr>
+                                        <td>Bond Info</td>
+                                        <td>{{ role.bond_description | default_if_none:"" }}</td>
+                                    </tr>
+                                {% endif %}
                                 <tr>
                                     <td>Criteria</td>
-                                    <td>{{ role.get_criteria | default_if_none:"" }}</td>
+                                    <td>{{ role.criteria | default_if_none:"" }}</td>
                                 </tr>
                                 {% if role.documents %}
                                     <tr>
@@ -191,8 +186,8 @@
                         </div>
                         <div class="col-sm-2">
                             <div class="row">
-                                <a class="btn btn-outline-danger" target="_blank"
-                                   href="{% url 'update_roles' company_id role.pk %}">Edit</a>
+                                <a class="btn btn-outline-secondary" target="_blank"
+                                   href="{% url 'edit_role' company_id role.pk %}">Edit</a>
                             </div>
                             <br/>
                             <div class="row">
@@ -218,10 +213,10 @@
                       action="{% url 'create_roles' company_id %}">
                     {% csrf_token %}
                     {% for field in create_role_form %}
-                        <div class="row">
+                        <div class="row m-2">
                             <div class="col-sm-4 text-sm-end">
                                 {{ field.label_tag }}
-                                {% if field.required %}
+                                {% if field.field.required %}
                                     <span class="required" style="color: red">*</span>
                                 {% endif %}
                             </div>
@@ -233,18 +228,18 @@
                             {% endfor %}
                         </div>
                     {% endfor %}
-                    <div class="row">
-                        <div class="col-sm-4 text-sm-end">
-                            <label for="criteria_options">Criteria <span class="required"
-                                                                         style="color: red">*</span>
-                            </label>
-                        </div>
-                        <div class="col-sm-2">
-                            <select name="criteria" class="form-select" id="criteria_options" required>
-                                <option>-------</option>
-                            </select>
-                        </div>
-                    </div>
+                    {#                    <div class="row">#}
+                    {#                        <div class="col-sm-4 text-sm-end">#}
+                    {#                            <label for="criteria_options">Criteria <span class="required"#}
+                    {#                                                                         style="color: red">*</span>#}
+                    {#                            </label>#}
+                    {#                        </div>#}
+                    {#                        <div class="col-sm-2">#}
+                    {#                            <select name="criteria" class="form-select" id="criteria_options" required>#}
+                    {#                                <option>-------</option>#}
+                    {#                            </select>#}
+                    {#                        </div>#}
+                    {#                    </div>#}
                     <br/>
                     <div class="row">
                         <div class="col-sm-4"></div>
@@ -279,12 +274,11 @@
     </div>
 
     <div class="modal fade border-danger" id="AlertErrorModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog" role="alert">
             <div class="modal-content">
-                <div class="modal-body">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                            aria-hidden="true">&times;</span></button>
-                    <p id="alert_content"></p>
+                <div class="modal-header bg-danger bg-opacity-75">
+                     <div id="alert_content"></div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
             </div>
         </div>
@@ -309,17 +303,17 @@
             {% if existing_criteria %}
                 $('#create_role_div').show();
                 $('#create_role_btn_div').hide();
-                $.ajax({
-                    url: "{% url 'ajax_get_criteria_for_company' %}",
-                    data: {
-                        'company_id':{{ company_id }}
-                    },
-                    success: function (data) {
-                        $("#criteria_options").html(data);
-                    }
-                });
+                {#$.ajax({#}
+                {#    url: "{% url 'ajax_get_criteria_for_company' %}",#}
+                {#    data: {#}
+                {#        'company_id':{{ company_id }}#}
+                {#    },#}
+                {#    success: function (data) {#}
+                {#        $("#criteria_options").html(data);#}
+                {#    }#}
+                //});
             {% else %}
-                $('#alert_content').html("Please create atleaset one criteria!");
+                $('#alert_content').html("Please create at least one criteria!");
                 $('#AlertErrorModal').modal('show');
             {% endif %}
         });

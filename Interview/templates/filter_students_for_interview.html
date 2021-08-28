@@ -1,0 +1,86 @@
+{% extends 'dashboard_content.html' %}
+{% block styles %}
+    <style>
+        .table-container {
+            margin-top: 100px;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px 0;
+            align-content: initial;
+        }
+
+        .main-container {
+            margin-top: 100px;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px 0;
+            align-content: initial;
+        }
+    </style>
+{% endblock %}
+{% block rightPanel %}
+    <div class="main-container">
+        <ul class="navbar-nav flex-column">
+            {% for job in jobs %}
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="collapse#{{ forloop.counter }}" data-target="#collapse1">
+                        <span> {{ job.name }} </span>
+                    </a>
+                    <ul id="collapse#{{ forloop.counter }}" style="list-style: none">
+                        <li>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <form method="POST" class="form-inline">{% csrf_token %}
+
+                                        <div class="table-responsive">
+                                            <table class="table" id="bootstrapdatatable">
+                                                <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>RollNo</th>
+                                                    <th>Batch</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for student in eligible_students %}
+                                                    <tr>
+                                                        <td>
+                                                            <input type="checkbox" name="new_user"
+                                                                   value="{{ student.roll_no }}">
+                                                            {{ forloop1.counter }}
+                                                        </td>
+                                                        <td>{{ student.roll_no }}</td>
+                                                        <td>{{ student.batch }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <hr/>
+                                        <br/>
+                                        <div class="row" style="padding: 10px">
+                                            <div class="col-sm-2"></div>
+                                            <div class="col-sm-3">
+                                                <button type="submit" name="approve" class="btn btn-success">Approve All
+                                                    Students
+                                                </button>
+                                            </div>
+                                            <div class="col-sm-2"></div>
+                                            <div class="col-sm-3">
+                                                <button type="submit" name="delete" class="btn btn-danger">Delete
+                                                </button>
+                                            </div>
+                                            <div class="col-sm-2"></div>
+                                        </div>
+                                    </form>
+                                </div>
+
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

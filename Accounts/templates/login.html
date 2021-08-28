@@ -3,14 +3,6 @@
 {% block form_content %}
     <form class="form-container" method="post" action="{% url 'login' %}">
         {% csrf_token %}
-        {% if alert_msg %}
-            <div class="alert alert-danger">
-                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                {% for msg in  alert_msg %}
-                    <strong>{{ msg }}<br/></strong>
-                {% endfor %}
-            </div>
-        {% endif %}
         <div class="mb-3">
             <label for="emailId" class="form-label">Email address</label>
             <input type="email" class="form-control" id="emailId" aria-describedby="emailHelp" name="email">
@@ -26,7 +18,9 @@
             <input type="checkbox" class="form-check-input" id="remember_check" name="remember_me">
             <label class="form-check-label" for="remember_check">Remember Me</label>
         </div>
-        <button type="submit" name="login" class="btn btn-primary btn-block">Login</button>
+        <div class="d-grid gap-2 mx-auto">
+            <button type="submit" name="login" class="btn btn-primary">Login</button>
+        </div>
 
         <hr class="my-3"/>
         <small>Click here to <a href="{% url 'signup' %}"> signup</a></small>

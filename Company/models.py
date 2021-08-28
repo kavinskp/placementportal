@@ -1,5 +1,8 @@
 from django.db import models
-from Curriculum.models import Regulation, Batch
+from django.dispatch import receiver
+from django.db.models.signals import post_save
+
+from Curriculum.models import Batch
 
 
 class CompanyInfo(models.Model):
@@ -16,8 +19,8 @@ class CompanyInfo(models.Model):
         (10, 'Others')
     )
 
-    fullName = models.CharField(max_length=50)
-    name = models.CharField(max_length=50, unique=True)
+    full_name = models.CharField(max_length=100)
+    name = models.CharField(max_length=50)
     website = models.URLField()
     logo = models.ImageField(upload_to='logo', blank=True, null=True)
     type = models.IntegerField(choices=TYPES)
@@ -26,6 +29,11 @@ class CompanyInfo(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_company_logo(self):
+        if self.logo is not None and self.logo != "":
+            return self.logo.url
+        return "/media/logo/company_logo.jpg"
 
 
 class HRContactInfo(models.Model):
@@ -59,20 +67,30 @@ class HRContactInfo(models.Model):
         return name
 
 
+def get_string(min_val, max_val):
+    val = None
+    if min_val is not None:
+        if max_val is not None:
+            val = str(min_val) + ' - ' + str(max_val)
+        else:
+            val = '> ' + str(min_val)
+    elif max_val is not None:
+        val = '< ' + str(max_val)
+    return val
+
+
 class Criteria(models.Model):
     company = models.ForeignKey(CompanyInfo, on_delete=models.CASCADE)
     name = models.CharField(max_length=20)
     batch = models.ManyToManyField(Batch)
     min_cgpa = models.FloatField(null=True, blank=True)
     max_cgpa = models.FloatField(null=True, blank=True)
-    min_gpa = models.FloatField(null=True, blank=True)
-    max_gpa = models.FloatField(null=True, blank=True)
     history = models.IntegerField(null=True, blank=True)
     current = models.IntegerField(null=True, blank=True)
     min_x_percentage = models.FloatField(null=True, blank=True)
     max_x_percentage = models.FloatField(null=True, blank=True)
-    min_xii_percentage = models.FloatField(null=True, blank=True)
-    max_xii_percentage = models.FloatField(null=True, blank=True)
+    min_x11_percentage = models.FloatField(null=True, blank=True)
+    max_x11_percentage = models.FloatField(null=True, blank=True)
     description = models.TextField(null=True, blank=True)
 
     class Meta:
@@ -82,97 +100,61 @@ class Criteria(models.Model):
         return self.name
 
     def display(self):
-        list = "<table>"
+        criteria_str = "<ul>"
         no_criteria = True
-        if self.get_required_cgpa():
+        if self.get_required_cgpa() is not None:
             no_criteria = False
-            list += "<tr><td>CGPA</td><td>" + str(self.get_required_cgpa()) + "</td></tr>"
-        if self.get_required_gpa():
+            criteria_str += "<li>CGPA " + self.get_required_cgpa() + "</li>"
+        if self.get_required_10th_percentage() is not None:
             no_criteria = False
-            list += "<tr><td>GPA</td><td>" + str(self.get_required_gpa()) + "</td></tr>"
-        if self.get_required_10th_percentage():
-            no_criteria = False
-            list += "<tr><td>10th %</td><td>" + str(self.get_required_10th_percentage()) + "</td></tr>"
-        if self.get_required_12th_percentage():
-            list += "<tr><td>12th %</td><td>" + str(self.get_required_12th_percentage()) + "</td></tr>"
-        if self.current:
+            criteria_str += "<li>10th % " + str(self.get_required_10th_percentage()) + "</li>"
+        if self.get_required_12th_percentage() is not None:
+            criteria_str += "<li>12th % " + str(self.get_required_12th_percentage()) + "</li>"
+        if self.current is not None:
             no_criteria = False
             if self.current == 0:
-                list += "<tr><td>No outstanding backlogs</td></tr>"
+                criteria_str += "<li>No outstanding backlogs</li>"
             else:
-                list += "<tr><td>Maximum " + str(self.current) + " outstanding backlogs</td></tr>"
-        if self.history:
+                criteria_str += "<li>Maximum " + str(self.current) + " outstanding backlogs</li>"
+        if self.history is not None:
             no_criteria = False
             if self.history == 0:
-                list += "<tr><td>No history of backlogs</td></tr>"
+                criteria_str += "<li>No history of backlogs</li>"
             else:
-                list += "<tr><td>Maximum " + str(self.history) + " backlogs in history</td></tr>"
-        list += "</table>"
+                criteria_str += "<li>Maximum " + str(self.history) + " backlogs in history</li>"
+        if self.description is not None and self.description != "":
+            no_criteria = False
+            criteria_str += "<li> Description : " + self.description + "</li>"
         if no_criteria:
-            list = "No Criteria"
-        return list
+            criteria_str += "<li>No Criteria</li>"
+        criteria_str += "</ul>"
+        return criteria_str
 
     def get_allowed_batches(self):
         batches = self.batch.all()
         allowed_batches = []
         for batch in batches:
-            allowed_batches.append(str(batch))
+            allowed_batches.append(batch)
         return allowed_batches
 
     def get_allowed_batch_html(self):
-        list = self.get_allowed_batches()
-        html = "<table>"
-        for item in list:
-            html += "<tr><td>"+str(item)+"</td></tr>"
-        html+="</table>"
+        html = "<ol>"
+        for item in self.get_allowed_batches():
+            html += "<li>" + str(item) + "</li>"
+        html += "</ol>"
         return html
 
     def get_required_cgpa(self):
-        cgpa = None
-        if self.min_cgpa is not None:
-            if self.max_cgpa is not None:
-                cgpa = str(self.min_cgpa) + ' - ' + str(self.max_cgpa)
-            else:
-                cgpa = '> ' + str(self.min_cgpa)
-        elif self.max_cgpa is not None:
-            cgpa = '< ' + str(self.max_cgpa)
-        return cgpa
-
-    def get_required_gpa(self):
-        gpa = None
-        if self.min_gpa is not None:
-            if self.max_gpa is not None:
-                gpa = str(self.min_gpa) + ' - ' + str(self.max_gpa)
-            else:
-                gpa = '> ' + str(self.min_gpa)
-        elif self.max_gpa is not None:
-            gpa = '< ' + str(self.max_gpa)
-        return gpa
+        return get_string(self.min_cgpa, self.max_cgpa)
 
     def get_required_10th_percentage(self):
-        x_per = None
-        if self.min_x_percentage is not None:
-            if self.max_x_percentage is not None:
-                x_per = str(self.min_x_percentage) + ' - ' + str(self.max_x_percentage)
-            else:
-                x_per = '> ' + str(self.min_x_percentage)
-        elif self.max_x_percentage is not None:
-            x_per = '< ' + str(self.max_x_percentage)
-        return x_per
+        return get_string(self.min_x_percentage, self.max_x_percentage)
 
     def get_required_12th_percentage(self):
-        xii_per = None
-        if self.min_xii_percentage is not None:
-            if self.max_xii_percentage is not None:
-                xii_per = str(self.min_xii_percentage) + ' - ' + str(self.max_xii_percentage)
-            else:
-                xii_per = '> ' + str(self.min_xii_percentage)
-        elif self.max_xii_percentage is not None:
-            xii_per = '< ' + str(self.max_xii_percentage)
-        return xii_per
+        return get_string(self.min_x11_percentage, self.max_x11_percentage)
 
 
-class JobRoles(models.Model):
+class CompanyJob(models.Model):
     JOB_TYPES = (
         (1, 'Full-Time'),
         (2, 'Part-Time'),
@@ -180,7 +162,7 @@ class JobRoles(models.Model):
         (4, 'Training')
     )
     company = models.ForeignKey(CompanyInfo, on_delete=models.CASCADE)
-    role_name = models.CharField(max_length=30)
+    role_name = models.CharField(max_length=100)
     type = models.SmallIntegerField(choices=JOB_TYPES)
     location = models.CharField(max_length=30, blank=True, null=True)
     salary_description = models.TextField(blank=True, null=True)
@@ -188,6 +170,7 @@ class JobRoles(models.Model):
     vacancy = models.SmallIntegerField(blank=True, null=True)
     minPackage = models.FloatField()
     maxPackage = models.FloatField(blank=True, null=True)
+    criteria = models.ForeignKey(Criteria, on_delete=models.CASCADE, null=True)
     documents = models.FileField(blank=True, null=True, upload_to='comapany/job/')
 
     def __str__(self):
@@ -200,17 +183,11 @@ class JobRoles(models.Model):
             package += str(self.maxPackage)
         return package
 
-    def get_criteria(self):
-        criterias = InterviewJobs.objects.filter(role_id=self.pk)
-        if criterias.exists():
-            return InterviewJobs.objects.get(role_id=self.pk).criteria
-        return None
-
     class Meta:
         unique_together = ('company', 'role_name')
 
 
-class Round(models.Model):
+class RoundInfo(models.Model):
     TYPES = (
         (0, 'Undecided'),
         (1, 'Assessment Test'),
@@ -247,22 +224,36 @@ class Round(models.Model):
         (4, 'Online'),
         (5, 'Others')
     )
+    job = models.ForeignKey(CompanyJob, on_delete=models.CASCADE)
     question_type = models.SmallIntegerField(choices=QUESTION_TYPES)
     type = models.SmallIntegerField(choices=TYPES)
-    mode = models.SmallIntegerField(choices=TEST_MODES),
+    mode = models.SmallIntegerField(choices=TEST_MODES)
+    round_number = models.IntegerField(default=0)
     status = models.SmallIntegerField(choices=STATUS, default=0),
     conversation_mode = models.SmallIntegerField(choices=CONVERSATION_MODE),
     other_medium = models.CharField(max_length=100, null=True),
     sample_questions = models.FileField(null=True, upload_to='comapany/round/')
     description = models.TextField()
 
-
-class InterviewJobs(models.Model):
-    role = models.OneToOneField(JobRoles, on_delete=models.CASCADE)
-    criteria = models.ForeignKey(Criteria, on_delete=models.CASCADE)
+    class Meta:
+        unique_together = ('job', 'round_number')
 
 
-class CompanyInterview(models.Model):
-    info = models.OneToOneField(CompanyInfo, on_delete=models.CASCADE)
-    job = models.ManyToManyField(InterviewJobs)
-    Round = models.ManyToManyField(Round)
+@receiver(post_save, sender=RoundInfo)
+def approve_status_post_save(sender, instance, created, *args, **kwargs):
+    round_number = instance.round_number
+    if round_number == 0:
+        job_rounds = RoundInfo.objects.filter(job=instance.job)
+        if job_rounds.exists():
+            last_round = job_rounds.last()
+        else:
+            last_round = 0
+        instance.round_number = last_round + 1
+        instance.save()
+
+
+class CompanySchedulePreference(models.Model):
+    company = models.ForeignKey(CompanyInfo, on_delete=models.CASCADE)
+    range_start = models.DateField()
+    range_end = models.DateField()
+    slot_count = models.PositiveSmallIntegerField(default=1)

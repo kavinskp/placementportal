@@ -1,0 +1,146 @@
+{% extends 'dashboard/content.html' %}
+{% block content %}
+    {% with active_menu="accounts" active_tab=approval_type %}
+        {{ block.super }}
+    {% endwith %}
+{% endblock %}
+{% block rightPanel %}
+    <div class="container-fluid p-2">
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                <div class="card">
+                    <div class="card-header fw-bold fs-4">
+                        New Users
+                    </div>
+                    <div class="card-body">
+                        {% if unapproved_users_list %}
+                            <form method="POST" class="form-inline">{% csrf_token %}
+
+                                <div class="table-responsive">
+                                    <table class="table table-striped data-table">
+                                        <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            {% if approval_type == 'approve_staff' %}
+                                                <th>Id</th>
+                                                <th>Designation</th>
+                                                <th>Department</th>
+                                            {% elif approval_type == 'approve_student' %}
+                                                <th>Id</th>
+                                                <th>Batch</th>
+                                                <th>Department</th>
+                                            {% elif approval_type == 'approve_interviewer' %}
+                                                <th>Company</th>
+                                                <th>Info</th>
+                                            {% endif %}
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for user_i in unapproved_users_list %}
+                                            {% with user=user_i approve_list=True %}
+                                                {% include 'dashboard/approval_table_content.html' %}
+                                            {% endwith %}
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="row" style="padding: 10px">
+                                    <div class="col-sm-2"></div>
+                                    <div class="col-sm-3">
+                                        <button type="submit" name="approve" class="btn btn-success">Approve
+                                        </button>
+                                    </div>
+                                    <div class="col-sm-2"></div>
+                                    <div class="col-sm-3">
+                                        <button type="submit" name="delete" class="btn btn-danger">Delete</button>
+                                    </div>
+                                    <div class="col-sm-2"></div>
+                                </div>
+                            </form>
+                        {% else %}
+                            <h6>No new years needed approval !!!</h6>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                <div class="card">
+                    <div class="card-header fw-bold fs-4">
+                        Active Users
+                    </div>
+                    <div class="card-body">
+                        {% if approved_users_list %}
+                            <form method="POST" class="form-inline">{% csrf_token %}
+                                <div class="table-responsive">
+                                    <table class="table table-striped data-table">
+                                        <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            {% if approval_type == 'approve_staff' %}
+                                                <th>Id</th>
+                                                <th>Designation</th>
+                                                <th>Department</th>
+                                            {% elif approval_type == 'approve_student' %}
+                                                <th>Id</th>
+                                                <th>Batch</th>
+                                                <th>Department</th>
+                                            {% elif approval_type == 'approve_interviewer' %}
+                                                <th>Company</th>
+                                                <th>Info</th>
+                                            {% endif %}
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for user_i in approved_users_list %}
+                                            {% with user=user_i approve_list=False %}
+                                                {% include 'dashboard/approval_table_content.html' %}
+                                            {% endwith %}
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="row" style="padding: 10px">
+                                    <div class="col-sm-2"></div>
+                                    <div class="col-sm-3">
+                                        <button type="submit" name="de_approve" class="btn btn-warning">De Approve
+                                        </button>
+                                    </div>
+                                    <div class="col-sm-7"></div>
+                                </div>
+                            </form>
+                        {% else %}
+                            <h6>No users approved yet !!!</h6>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        $('.company-info-toggle-btn').click(function () {
+            var url = $(this).attr('data-url');
+            var company_id = $(this).attr('data-company-id');
+            $.ajax({
+                url: url,
+                data: {
+                    'company_id': company_id
+                },
+                success: function (data) {
+                    $('#company_info_' + company_id).html(data);
+                }
+            });
+            {#$('#view_roles_'+company_id).modal('show');#}
+        });
+    </script>
+{% endblock %}

@@ -6,8 +6,8 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.models import AbstractUser
 from django.dispatch import receiver
 from django.db.models.signals import post_save
-from Curriculum.models import Department, StudentInfo
-from Company.models import CompanyInterview, CompanyInfo
+from Curriculum.models import Department, StudentInfo, Batch
+from Company.models import CompanyInfo
 
 
 class UserType(enum.Enum):
@@ -32,7 +32,7 @@ class UserGroups(enum.Enum):
     STUDENT = 'Student'
     PLACEMENT_OFFICER = 'PO'
     PLACEMENT_REPRESENTATIVE = 'PR'
-    POINT_OF_CONTACT = 'POC'
+    RECRUITER = 'recruiter'
 
     def group_name(self):
         return self.value
@@ -48,6 +48,8 @@ class UserPermissions(enum.Enum):
     CAN_ASSIGN_PO = ('Curriculum', 'can_assign_po', 'Can assign Placement officer')
     CAN_ASSIGN_PR = ('Curriculum', 'can_assign_pr', 'Can assign Placement Representative')
     CAN_ASSIGN_POC = ('Curriculum', 'can_assign_poc', 'Can assign Point of Contact for a company')
+    CAN_SCHEDULE_INTERVIEW = ('Interview', 'can_schedule_interview', 'Can schedule interview')
+    CAN_UPDATE_COMPANY_DETAILS = ('Company', 'can_update_company_details', 'Can update company Details')
 
     def get_app_label(self):
         return self.value[0]
@@ -82,7 +84,7 @@ class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, user_type=None, activation_key=None,
                     key_expires=None):
         """
-        Creates and saves a User with the given email, date of
+        Creates and saves a User with the given email, preferredslot of
         birth and password.
         """
         user = self.model(
@@ -98,7 +100,7 @@ class CustomUserManager(BaseUserManager):
 
     def create_superuser(self, email, password, activation_key=None, key_expires=None):
         """
-        Creates and saves a superuser with the given email, date of
+        Creates and saves a superuser with the given email, preferredslot of
         birth and password.
         """
         user = self.create_user(
@@ -112,8 +114,6 @@ class CustomUserManager(BaseUserManager):
         user.is_verified = True
         user.is_approved = True
         user.is_active = True
-        user.has_filled_profile = True
-        user.account_created = True
         user.save(using=self._db)
         return user
 
@@ -153,8 +153,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         unique=True,
     )
     user_type = models.SmallIntegerField(choices=USER_TYPES)
-    has_filled_profile = models.BooleanField(default=False)
-    account_created = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
     marked_inactive = models.BooleanField(default=False)
@@ -179,6 +177,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
             return self.profile.full_name()
         return None
 
+    @property
     def is_active_user(self):
         if not self.marked_inactive and self.is_verified and \
                 self.account_created and self.has_filled_profile and self.is_approved:
@@ -186,10 +185,31 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         else:
             return False
 
+    @property
+    def has_filled_profile(self):
+        if self.profile is not None:
+            return True
+        return False
+
+    @property
+    def account_created(self):
+        try:
+            if self.user_type == UserType.COLLEGE_ADMIN.value and self.staffaccount:
+                return True
+            if self.user_type == UserType.STAFF.value and self.staffaccount:
+                return True
+            if self.user_type == UserType.STUDENT.value and self.studentaccount:
+                return True
+            if self.user_type == UserType.INTERVIEWER.value and self.intervieweraccount:
+                return True
+        except Exception:
+            return False
+        return False
+
 
 @receiver(post_save, sender=CustomUser)
 def approve_status_post_save(sender, instance, created, *args, **kwargs):
-    current_val = instance.is_active_user()
+    current_val = instance.is_active_user
     if current_val:
         if not instance.is_active:
             instance.is_active = True
@@ -221,9 +241,14 @@ class StaffAccount(models.Model):
         return self.staff_id
 
 
+class FacultyAdvisor(models.Model):
+    account = models.OneToOneField(StaffAccount, on_delete=models.CASCADE)
+    batch = models.ForeignKey(Batch, on_delete=models.CASCADE)
+
+
 class StudentAccount(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-    info = models.ForeignKey(StudentInfo, on_delete=models.CASCADE)
+    info = models.OneToOneField(StudentInfo, on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.user)
@@ -231,23 +256,20 @@ class StudentAccount(models.Model):
     def full_name(self):
         return self.user.full_name()
 
-    def department(self):
-        return self.info.department
-
     def batch(self):
         return self.info.batch
 
     def roll_no(self):
         return self.info.roll_no
 
+    @property
     def get_id(self):
-        return self.roll_no()
+        return self.roll_no
 
 
 class InterviewerAccount(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-    company_info = models.ForeignKey(CompanyInfo, on_delete=models.CASCADE)
-    interview = models.ForeignKey(CompanyInterview, on_delete=models.CASCADE, null=True)
+    company_info = models.OneToOneField(CompanyInfo, on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.user)

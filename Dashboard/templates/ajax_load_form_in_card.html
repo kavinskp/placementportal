@@ -1,0 +1,33 @@
+<div class="card h-100">
+    <div class="card-header fw-bold fs-4">
+        {{ form_title }}
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            <div>
+                {% csrf_token %}
+                {% if id %}
+                    <input type="hidden" name="id" value="{{ id }}"/>
+                {% endif %}
+                {% for field in form %}
+                    <div class="row">
+                        <div class="col-sm-4 text-sm-end">{{ field.label_tag }}</div>
+                        <div class="col-sm-8">{{ field }} <br/>
+                            {% for error in field.errors %}
+                                <small style="color: red">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <br/>
+                {% endfor %}
+                <div class="row">
+                    <div class="col-sm-4"></div>
+                    <div class="col-sm-4">
+                        <button type="submit" name="{{ submit_name }}" class="btn btn-success">Submit</button>
+                        <a class="btn btn-danger" href="{{ cancel_url }}" >Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

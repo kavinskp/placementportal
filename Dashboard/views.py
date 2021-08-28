@@ -17,4 +17,4 @@ def company_index(request):
 
 @login_required()
 def dashboard(request):
-    return render(request, 'dashboard.html')
+    return render(request, 'dashboard/dashboard.html')

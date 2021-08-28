@@ -1,0 +1,43 @@
+{% extends 'dashboard/content.html' %}
+{% block content %}
+    {% with active_menu="recruiter" active_tab="view_company_info" %}
+        {{ block.super }}
+    {% endwith %}
+{% endblock %}
+{% block rightPanel %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                <div class="card">
+                    <div class="card-header fw-bold fs-4">
+                        Edit Company Info
+                    </div>
+                    <div class="card-body">
+                        <form method="post" enctype="multipart/form-data">
+                            <div>
+                                {% csrf_token %}
+                                {% for field in form %}
+                                    <div class="row">
+                                        <div class="col-sm-4 text-sm-end">{{ field.label_tag }}</div>
+                                        <div class="col-sm-8">{{ field }} <br/>
+                                            {% for error in field.errors %}
+                                                <small style="color: red">{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <br/>
+                                {% endfor %}
+                                <div class="row">
+                                    <div class="col-sm-4"></div>
+                                    <div class="col-sm-4">
+                                        <button type="submit" class="btn btn-success">Create Batch</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

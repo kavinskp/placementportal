@@ -1,7 +1,7 @@
 from django.shortcuts import render, Http404
 from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from Accounts.models import StaffAccount, StudentAccount, CustomUser, UserPermissions, UserGroups, InterviewerAccount
-from Company.models import CompanyInterview, CompanyInfo
+from Company.models import CompanyJob
 
 
 def is_principal(user):
@@ -40,7 +40,7 @@ def __update_user_approval_status(request):
         user_list = request.POST.getlist('new_user')
         no_of_users_approved = str(len(user_list))
         for user in user_list:
-            appr_user = CustomUser.objects.get(email=user)
+            appr_user = CustomUser.objects.get(pk=user)
             appr_user.is_approved = True
             appr_user.save()
         return_msg = str('No. of users Approved : ' + no_of_users_approved)
@@ -48,7 +48,7 @@ def __update_user_approval_status(request):
         user_list = request.POST.getlist('existing_user')
         no_of_users_de_approved = str(len(user_list))
         for user in user_list:
-            de_app_user = CustomUser.objects.get(email=user)
+            de_app_user = CustomUser.objects.get(pk=user)
             de_app_user.is_approved = False
             de_app_user.save()
         return_msg = str('No. of users De-approved : ' + no_of_users_de_approved)
@@ -56,7 +56,7 @@ def __update_user_approval_status(request):
         user_list = request.POST.getlist('new_user')
         no_of_users_deleted = str(len(user_list))
         for user in user_list:
-            CustomUser.objects.filter(email=user).delete()
+            CustomUser.objects.filter(pk=user).delete()
         return_msg = str('No. of users Deleted : ' + no_of_users_deleted)
     return return_msg
 
@@ -64,12 +64,14 @@ def __update_user_approval_status(request):
 @permission_required(UserPermissions.CAN_APPROVE_STAFF.get_permission())
 @user_passes_test(is_principal)
 def principal_approval(request):
-    values = {'approval_type': 'Staff'}
+    values = {'approval_type': 'approve_staff'}
     if request.method == 'POST':
         notification = __update_user_approval_status(request)
         values.update({'notification': [notification]})
-    unapproved_users_list = StaffAccount.objects.filter(user__is_approved=False, user__user_type=2)
-    approved_users_list = StaffAccount.objects.filter(user__is_approved=True, user__user_type=2)
+    unapproved_users_list = StaffAccount.objects.filter(user__is_approved=False,
+                                                        user__user_type=2)
+    approved_users_list = StaffAccount.objects.filter(user__is_approved=True,
+                                                      user__user_type=2)
     values.update({'approved_users_list': approved_users_list})
     values.update({'unapproved_users_list': unapproved_users_list})
     return render(request, 'approval.html', values)
@@ -78,12 +80,13 @@ def principal_approval(request):
 @user_passes_test(is_hod)
 @permission_required(UserPermissions.CAN_APPROVE_STAFF.get_permission())
 def hod_approval(request, user_obj):
-    values = {'approval_type': 'Staff'}
+    values = {'approval_type': 'approve_staff'}
     if request.method == 'POST':
         notification = __update_user_approval_status(request)
         values.update({'notification': [notification]})
 
-    unapproved_users_list = StaffAccount.objects.filter(user__is_approved=False, designation=3,
+    unapproved_users_list = StaffAccount.objects.filter(user__is_approved=False,
+                                                        designation=3,
                                                         department=user_obj.department)
     approved_users_list = StaffAccount.objects.filter(user__is_approved=True, designation=3,
                                                       department=user_obj.department)
@@ -94,7 +97,7 @@ def hod_approval(request, user_obj):
 
 @user_passes_test(is_faculty)
 def approve_student(request, user_obj):
-    values = {'approval_type': 'Student'}
+    values = {'approval_type': 'approve_student'}
     if request.method == 'POST':
         notification = __update_user_approval_status(request)
         values.update({'notification': [notification]})
@@ -109,7 +112,7 @@ def approve_student(request, user_obj):
 
 @user_passes_test(is_po)
 def po_company_approvals(request):
-    context = {'approval_type': 'Interviewer'}
+    context = {'approval_type': 'approve_interviewer'}
     if request.method == 'POST':
         notification = __update_user_approval_status(request)
         context.update({'notification': [notification]})
@@ -122,17 +125,19 @@ def po_company_approvals(request):
 
 @user_passes_test(is_pr)
 def pr_company_approvals(request):
-    values = {'approval_type': 'Interviewer'}
+    values = {'approval_type': 'approve_interviewer'}
     if request.method == 'POST':
         notification = __update_user_approval_status(request)
         values.update({'notification': [notification]})
     student_obj = StudentAccount.objects.get(user=request.user)
-    interview = CompanyInterview.objects.filter(criteria__batch=student_obj.info.batch)
+    jobs = CompanyJob.objects.filter(criteria__batch=student_obj.info.batch)
     company_list = None
-    if interview is not None:
-        company_list = interview.values('company')
-    unapproved_users_list = InterviewerAccount.objects.filter(user__is_approved=False, company__in=company_list)
-    approved_users_list = InterviewerAccount.objects.filter(user__is_approved=True, company__in=company_list)
+    if jobs.exists():
+        company_list = jobs.values('company').distinct()
+    unapproved_users_list = InterviewerAccount.objects.filter(user__is_approved=False,
+                                                              company_info__in=company_list)
+    approved_users_list = InterviewerAccount.objects.filter(user__is_approved=True,
+                                                            company_info__in=company_list)
     values.update({'approved_users_list': approved_users_list})
     values.update({'unapproved_users_list': unapproved_users_list})
     return render(request, 'approval.html', values)
@@ -149,7 +154,7 @@ def approve_staff_accounts(request):
             return hod_approval(request, staff_obj)
         return Http404
     except Exception as e:
-        return render(request, 'dashboard.html', {
+        return render(request, 'dashboard/dashboard.html', {
             'error_msg': [str(e)]
         })
 
@@ -161,7 +166,7 @@ def approve_student_accounts(request):
         user_obj = StaffAccount.objects.get(user=request.user)
         return approve_student(request, user_obj)
     except Exception as e:
-        return render(request, 'dashboard.html', {
+        return render(request, 'dashboard/dashboard.html', {
             'error_msg': [str(e)]
         })
 
@@ -175,6 +180,6 @@ def approve_interviewer_accounts(request):
         if is_pr(user=request.user):
             return pr_company_approvals(request)
     except Exception as e:
-        return render(request, 'dashboard.html', {
+        return render(request, 'dashboard/dashboard.html', {
             'error_msg': [str(e)]
         })

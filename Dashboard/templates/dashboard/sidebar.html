@@ -1,0 +1,241 @@
+<div class="offcanvas offcanvas-start sidebar-nav bg-dark text-white" tabindex="-1" id="offcanvasExample"
+     aria-labelledby="offcanvasExampleLabel">
+    <div class="offcanvas-body p-0">
+        <nav class="navbar-dark">
+            <ul class="navbar-nav">
+                <li class="my-1 px-3 text-muted">
+                    <div class="fw-bold"><span><i class="bi bi-person-circle"></i> </span>User Info</div>
+                    <hr class="dropdown-divider"/>
+                    <p>Email : {{ request.user.email }}</p>
+                    <p>Phone : {{ request.user.profile.phone_number }}</p>
+                    <p>{{ request.user.get_user_type_display }}</p>
+                </li>
+                <li class="my-1">
+                    <hr class="dropdown-divider"/>
+                </li>
+                {% if perms.Accounts.can_approve_staff or perms.Accounts.can_approve_student or perms.Accounts.can_approve_interviewer %}
+                    <li>
+                        <a class="nav-link px-3 sidebar-link {% if active_menu == "accounts" %}active{% endif %}"
+                           data-bs-toggle="collapse" href="#approve_accounts_collapse"
+                           role="button"
+                           aria-expanded="false" aria-controls="approve_accounts_collapse">
+                            <span class="me-2"><i class="bi bi-person-check"></i></span>
+                            <span>User management</span>
+                            <span class="right-icon ms-auto">
+                            <i class="bi bi-chevron-down"></i>
+                        </span>
+
+                        </a>
+                        <div class="collapse {% if active_menu == "accounts" %}show{% endif %}"
+                             id="approve_accounts_collapse">
+                            <ul class="navbar-nav ps-3">
+                                {% if perms.Accounts.can_approve_staff %}
+                                    <li>
+                                        <a href="{% url 'approve_staffs' %}"
+                                           class="nav-link px-3 {% if active_tab == "approve_staff" %}active{% endif %}">
+                                            <span class="me-2"><i class="bi bi-pen-fill"></i></span>
+                                            <span>Approve Staffs</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.Accounts.can_approve_student %}
+                                    <li>
+                                        <a href="{% url 'approve_students' %}"
+                                           class="nav-link px-3 {% if active_tab == "approve_student" %}active{% endif %}">
+                                            <span class="me-2"><i class="bi bi-people-fill"></i></span>
+                                            <span>Approve Students</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.Accounts.can_approve_interviewer %}
+                                    <li>
+                                        <a href="{% url 'approve_interviewers' %}"
+                                           class="nav-link px-3 {% if active_tab == "approve_interviewer" %}active{% endif %}">
+                                            <span class="me-2"><i class="bi bi-building"></i></span>
+                                            <span>Approve Interviewers</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </li>
+                    <li class="my-1">
+                        <hr class="dropdown-divider"/>
+                    </li>
+                {% endif %}
+
+                {% if request.user.get_user_type_display == 'Interviewer' %}
+                    <li>
+                        <a class="nav-link px-3 sidebar-link {% if active_menu == "recruiter" %}active{% endif %}"
+                           data-bs-toggle="collapse" href="#recruiter_collapse"
+                           role="button"
+                           aria-expanded="false" aria-controls="recruiter_collapse">
+                            <span class="me-2"><i class="bi bi-building"></i></span>
+                            <span>Company</span>
+                            <span class="right-icon ms-auto">
+                            <i class="bi bi-chevron-down"></i>
+                        </span>
+
+                        </a>
+                        <div class="collapse {% if active_menu == "recruiter" %}show{% endif %}"
+                             id="recruiter_collapse">
+                            <ul class="navbar-nav ps-3">
+                                <li>
+                                    <a href="{% url 'view_company_info' %}"
+                                       class="nav-link px-3 {% if active_tab == "view_company_info" %}active{% endif %}">
+                                        <span class="me-2"><i class="bi bi-info-circle"></i></span>
+                                        <span>View company details</span>
+                                    </a>
+                                </li>
+{#                                <li>#}
+{#                                    <a href="{% url 'approve_students' %}"#}
+{#                                       class="nav-link px-3 {% if active_tab == "approve_student" %}active{% endif %}">#}
+{#                                        <span class="me-2"><i class="bi bi-people-fill"></i></span>#}
+{#                                        <span>Approve Students</span>#}
+{#                                    </a>#}
+{#                                </li>#}
+{#                                <li>#}
+{#                                    <a href="{% url 'approve_interviewers' %}"#}
+{#                                       class="nav-link px-3 {% if active_tab == "approve_interviewer" %}active{% endif %}">#}
+{#                                        <span class="me-2"><i class="bi bi-building"></i></span>#}
+{#                                        <span>Approve Interviewers</span>#}
+{#                                    </a>#}
+{#                                </li>#}
+                            </ul>
+                        </div>
+                    </li>
+                    <li class="my-1">
+                        <hr class="dropdown-divider"/>
+                    </li>
+                {% endif %}
+
+
+                <li>
+                    <a class="nav-link px-3 sidebar-link {% if active_menu == "college" %}active{% endif %}"
+                       data-bs-toggle="collapse" href="#college_collapse"
+                       role="button"
+                       aria-expanded="false" aria-controls="college_collapse">
+                        <span class="me-2"><i class="bi bi-grid"></i></span>
+                        <span>College</span>
+                        <span class="right-icon ms-auto">
+                            <i class="bi bi-chevron-down"></i>
+                        </span>
+                    </a>
+                    <div class="collapse {% if active_menu == "college" %}show{% endif %}" id="college_collapse">
+                        <ul class="navbar-nav ps-3">
+                            <li>
+                                <a href="{% url 'view_batches' %}"
+                                   class="nav-link  px-3 {% if active_tab == "view_batches" %}active{% endif %}">
+                                    <span class="me-2"><i class="bi bi-box"></i></span>
+                                    <span>View Batches Information</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url 'view_regulations' %}"
+                                   class="nav-link  px-3 {% if active_tab == "view_regulations" %}active{% endif %}">
+                                    <span class="me-2"><i class="bi bi-people-fill"></i></span>
+                                    <span>View Regulations</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url 'view_hods' %}"
+                                   class="nav-link px-3 {% if active_tab == "view_hods" %}active{% endif %}">
+                                    <span class="me-2"><i class="bi bi-bank"></i></span>
+                                    <span>HODs Information</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url 'view_po_details' %}"
+                                   class="nav-link px-3 {% if active_tab == "view_pos" %}active{% endif %}">
+                                    <span class="me-2"><i class="bi bi-briefcase"></i></span>
+                                    <span>Placement Officer Info</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url 'view_all_pr_details' %}"
+                                   class="nav-link px-3 {% if active_tab == "view_all_prs" %}active{% endif %}">
+                                    <span class="me-2"><i class="bi bi-stars"></i></span>
+                                    <span>All PRs Information</span>
+                                </a>
+                            </li>
+
+                            {% if perms.Curriculum.can_assign_pr %}
+                                <li>
+                                    <a href="{% url 'assign_pr' %}"
+                                       class="nav-link px-3 {% if active_tab == "assign_pr" %}active{% endif %}">
+                                        <span class="me-2"><i class="bi bi-headset"></i></span>
+                                        <span>View Department PRs</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </li>
+                <li class="my-1">
+                    <hr class="dropdown-divider"/>
+                </li>
+                <li>
+                    <a class="nav-link px-3 sidebar-link {% if active_menu == "interview" %}active{% endif %}"
+                       data-bs-toggle="collapse" href="#interview_collapse"
+                       role="button"
+                       aria-expanded="false" aria-controls="interview_collapse">
+                        <span class="me-2"><i class="bi bi-award"></i></span>
+                        <span>Interview</span>
+                        <span class="right-icon ms-auto">
+                            <i class="bi bi-chevron-down"></i>
+                        </span>
+
+                    </a>
+                    <div class="collapse {% if active_menu == "interview" %}show{% endif %}" id="interview_collapse">
+                        <ul class="navbar-nav ps-3">
+                            {% if perms.Interview.can_schedule_interview %}
+                                <li>
+                                    <a href="{% url 'manage_companies' %}"
+                                       class="nav-link px-3 {% if active_tab == "manage_companies" %}active{% endif %}">
+                                        <span class="me-2"><i class="bi bi-check2-square"></i></span>
+                                        <span>Manage Companies</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            <li>
+                                <a href="#"
+                                   class="nav-link px-3 {% if active_tab == "schedule_interview" %}active{% endif %}">
+                                    <span class="me-2"><i class="bi bi-calendar3"></i></span>
+                                    <span>View Interviews</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="my-1">
+                    <hr class="dropdown-divider"/>
+                </li>
+                <li>
+                    <a class="nav-link px-3 sidebar-link {% if active_menu == "layout" %}active{% endif %}"
+                       data-bs-toggle="collapse" href="#layout_collapse"
+                       role="button"
+                       aria-expanded="false" aria-controls="layout_collapse">
+                        <span class="me-2"><i class="bi bi-grid"></i></span>
+                        <span>Layout</span>
+                        <span class="right-icon ms-auto">
+                            <i class="bi bi-chevron-down"></i>
+                        </span>
+
+                    </a>
+                    <div class="collapse {% if active_menu == "layout" %}show{% endif %}" id="layout_collapse">
+                        <ul class="navbar-nav ps-3">
+                            <li>
+                                <a href="#" class="nav-link px-3 {% if active_tab == "layout" %}active{% endif %}">
+                                    <span class="me-2"><i class="bi bi-grid"></i></span>
+                                    <span>Layout1</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+        </nav>
+
+    </div>
+</div>

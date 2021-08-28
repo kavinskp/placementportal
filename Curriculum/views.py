@@ -2,60 +2,195 @@ from django import forms
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import render, redirect, Http404
 from django.contrib import messages
-
-from Curriculum.forms import BatchForm
-from Curriculum.models import Regulation, Department, Batch
+from Curriculum.forms import BatchForm, RegulationForm, UpdateRegulationForm
 from Accounts.models import UserPermissions
 from Accounts.views.utils import *
 
 
-@permission_required(UserPermissions.CAN_UPDATE_BATCHES.get_permission())
-def update_batches(request, batches):
-    is_error = False
-    form = None
+def view_batches(request):
+    batch_form = BatchForm()
+    active_batches = Batch.objects.filter(active=True)
+    inactive_batches = Batch.objects.filter(active=False)
     error_msg = None
-    try:
-        form = BatchForm(request.POST)
-        if form.is_valid():
-            batch_obj = form.save()
-            msg = "Created batch " + str(batch_obj) + " !"
+    if request.method == 'POST':
+        if request.user.has_perm(UserPermissions.CAN_UPDATE_BATCHES.get_permission()):
+            try:
+                if 'create_batch' in request.POST:
+                    batch_form = BatchForm(request.POST)
+                    if batch_form.is_valid():
+                        batch_obj = batch_form.save()
+                        msg = "Created batch " + str(batch_obj) + " !"
+                        messages.success(request, msg)
+                        return redirect('view_batches')
+                    else:
+                        error_msg = ['Cannot create batch']
+                        if batch_form.errors is not None:
+                            error_msg = []
+                            for error in batch_form.non_field_errors():
+                                error_msg.append(error)
+            except forms.ValidationError as e:
+                error_msg = [str(e)]
+        else:
+            error_msg = ['You don\'t have permission to do this action']
+    return render(request, 'view_batches.html', {
+        'batches': active_batches,
+        'inactive_batches': inactive_batches,
+        'batch_form': batch_form,
+        'error_msg': error_msg
+    })
+
+
+def view_regulations(request):
+    regulations = Regulation.objects.filter(active=True)
+    inactive_regulations = Regulation.objects.filter(active=False)
+    regulation_form = RegulationForm()
+    error_msg = None
+    if request.method == 'POST':
+        if request.user.has_perm(UserPermissions.CAN_UPDATE_BATCHES.get_permission()):
+            if 'create_regulation' in request.POST:
+                regulation_form = RegulationForm(request.POST)
+                if regulation_form.is_valid():
+                    reg_obj = regulation_form.save()
+                    msg = "Created Regulation " + str(reg_obj) + " !"
+                    messages.success(request, msg)
+                    return redirect('view_regulations')
+                else:
+                    error_msg = ['Cannot create regulation']
+                    if regulation_form.errors is not None:
+                        error_msg = []
+                        for error in regulation_form.non_field_errors():
+                            error_msg.append(error)
+            elif 'update_current_semester' in request.POST:
+                try:
+                    regulation_id = request.POST['regulation_id']
+                    regulation = Regulation.objects.get(pk=regulation_id)
+                    current_sem = int(request.POST['current_semester'])
+                    programme_period = regulation.programme_period
+                    if current_sem > programme_period * 2:
+                        raise forms.ValidationError(
+                            'Cannot be greater than ' + str(programme_period * 2) + " for this regulation!")
+                    prev_reg_objs = Regulation.objects.filter(programme=regulation.programme,
+                                                              start_year__gt=regulation.start_year,
+                                                              current_semester__lt=current_sem,
+                                                              current_semester__gt=0)
+                    if prev_reg_objs.exists():
+                        raise forms.ValidationError(
+                            'Current semester cannot be greater than regulations started before!')
+                    prev_reg_objs = Regulation.objects.filter(programme=regulation.programme,
+                                                              start_year__lt=regulation.start_year,
+                                                              current_semester__gt=current_sem)
+                    if prev_reg_objs.exists():
+                        raise forms.ValidationError(
+                            'Current semester cannot be lesser than regulations started after!')
+                    reg_objs = Regulation.objects.filter(programme=regulation.programme,
+                                                         current_semester=current_sem).exclude(
+                        start_year=regulation.start_year)
+                    if reg_objs.exists():
+                        raise forms.ValidationError(
+                            'Another regulation started in different year in this programme has same value!')
+                    regulation.current_semester = current_sem
+                    regulation.save()
+                    msg = "Current semester for regulation " + str(regulation) + " is updated! "
+                    messages.success(request, msg)
+                    return redirect('view_regulations')
+                except forms.ValidationError as e:
+                    error_msg = e
+        else:
+            error_msg = ['You don\'t have permission to do this action']
+    return render(request, 'view_regulations.html', {
+        'regulations': regulations,
+        'inactive_regulations': inactive_regulations,
+        'regulation_form': regulation_form,
+        'error_msg': error_msg
+    })
+
+
+def ajax_load_regulation_form(request):
+    regulation_id = request.GET.get('regulation_id')
+    regulation_obj = Regulation.objects.get(pk=regulation_id)
+    form = UpdateRegulationForm(instance=regulation_obj)
+    cancel_url = redirect('view_regulations')
+    return render(request, 'ajax_load_form_in_card.html', {
+        'form': form,
+        'id': regulation_id,
+        'form_title': 'Edit Regulation Information',
+        'submit_name': 'update_regulation',
+        'cancel_url': cancel_url
+    })
+
+
+@permission_required(UserPermissions.CAN_UPDATE_BATCHES.get_permission())
+def mark_as_active_batch(request, batch_id):
+    batch_obj = Batch.objects.get(pk=batch_id)
+    batch_obj.active = True
+    batch_obj.save()
+    msg = str(batch_obj) + " batch marked as active !"
+    messages.success(request, msg)
+    return redirect('view_batches')
+
+
+@permission_required(UserPermissions.CAN_UPDATE_BATCHES.get_permission())
+def delete_regulation(request, regulation_id):
+    if request.method == 'POST':
+        if 'delete' in request.POST:
+            regulation_id = request.POST['id']
+            regulation_obj = Regulation.objects.get(pk=regulation_id)
+            regulation_obj.delete()
+            msg = "Regulation " + str(regulation_obj) + " is deleted !"
             messages.success(request, msg)
             return redirect('view_batches')
-        else:
-            is_error = True
-            error_msg = ['Validation Failure!']
-    except forms.ValidationError as error:
-        error_msg = [error]
-        is_error = True
-    if is_error:
-        return render(request, 'view_batches.html', {
-            'batches': batches,
-            'form': form,
-            'error_msg': error_msg
-        })
-
-
-def view_batches(request):
-    error_msg = None
-    batches = Batch.objects.all()
-    if request.method == 'POST':
-       return update_batches(request, batches)
-    form = BatchForm()
-    return render(request, 'view_batches.html', {
+        if 'mark_as_inactive' in request.POST:
+            regulation_id = request.POST['id']
+            regulation_obj = Regulation.objects.get(pk=regulation_id)
+            batch_objs = Batch.objects.filter(regulation=regulation_obj)
+            for batch_obj in batch_objs:
+                batch_obj.active = False
+                batch_obj.save()
+            regulation_obj.active = False
+            regulation_obj.save()
+            msg = str(len(batch_objs)) + " batches marked as inactive !"
+            messages.success(request, msg)
+            return redirect('view_batches')
+    regulation_obj = Regulation.objects.get(pk=regulation_id)
+    batches = Batch.objects.filter(regulation=regulation_obj)
+    students = StudentAccount.objects.filter(info__batch__regulation=regulation_obj)
+    confirm_text = str(len(students)) + ' students is in this regulation ' + str(
+        regulation_obj) + ' !! Please check and confirm!'
+    return render(request, 'check_and_delete_batch.html', {
+        'id': regulation_id,
         'batches': batches,
-        'form': form,
-        'error_msg': error_msg
+        'students': students,
+        'confirm_text': confirm_text
     })
 
 
 @permission_required(UserPermissions.CAN_UPDATE_BATCHES.get_permission())
 def delete_batch(request, batch_id):
+    if request.method == 'POST':
+        if 'delete' in request.POST:
+            batch_id = request.POST['id']
+            batch_obj = Batch.objects.get(pk=batch_id)
+            batch_obj.delete()
+            msg = "Batch " + str(batch_obj) + " for Department " + str(batch_obj.department) + " is deleted !"
+            messages.success(request, msg)
+            return redirect('view_batches')
+        if 'mark_as_inactive' in request.POST:
+            batch_id = request.POST['id']
+            batch_obj = Batch.objects.get(pk=batch_id)
+            batch_obj.active = False
+            batch_obj.save()
+            msg = "Batch " + str(batch_obj) + " for Department " + str(
+                batch_obj.department) + " is marked as inactive !"
+            messages.success(request, msg)
+            return redirect('view_batches')
     batch_obj = Batch.objects.get(pk=batch_id)
-    batch_obj.in_active = True
-    batch_obj.save()
-    msg = "Batch " + str(batch_obj) + " for Department " + str(batch_obj.department) + " marked as Inactive !"
-    messages.success(request, msg)
-    return redirect('view_batches')
+    students = StudentAccount.objects.filter(info__batch_id=batch_id)
+    confirm_text = str(len(students)) + ' students is in batch ' + str(batch_obj) + ' !! Please check and confirm!'
+    return render(request, 'check_and_delete_batch.html', {
+        'id': batch_id,
+        'students': students,
+        'confirm_text': confirm_text
+    })
 
 
 @permission_required(UserPermissions.CAN_ASSIGN_HOD.get_permission())
@@ -75,16 +210,16 @@ def assign_hod(request):
                 messages.success(request, msg)
                 return redirect('view_hods')
         except Exception as e:
-            return render(request, 'dashboard.html', {
-                'error_msg': [str(e)]
-            })
+            msg = str(e)
+            messages.error(request, msg)
+            return redirect('dashboard')
 
 
 def view_hods(request):
     error_msg = None
     hods = getHODsOrderByName()
     if request.method == 'POST':
-       return assign_hod(request)
+        return assign_hod(request)
     departments = Department.objects.all().exclude(name='General')
     return render(request, 'view_hods_info.html', {
         'hods_info': hods,
@@ -135,9 +270,9 @@ def assign_po(request):
             messages.success(request, msg)
             return redirect('view_po_details')
     except Exception as e:
-        return render(request, 'dashboard.html', {
-            'error_msg': [str(e)]
-        })
+        msg = str(e)
+        messages.error(request, msg)
+        return redirect('dashboard')
 
 
 def view_po_details(request):
@@ -186,7 +321,7 @@ def assign_pr(request):
                 user_obj = student_obj.user
                 group = Group.objects.get(name='PR')
                 group.user_set.add(user_obj)
-                msg = student_obj.full_name() + " alloted as PR for " + str(dep_name) + "!"
+                msg = student_obj.full_name() + " alloted as PR for " + str(student_obj.batch()) + "!"
                 messages.success(request, msg)
                 return redirect('assign_pr')
         except Exception as e:

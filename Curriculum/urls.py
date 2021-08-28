@@ -3,6 +3,11 @@ from Curriculum.views import *
 
 urlpatterns = [
     url(r'^batches/', view_batches, name='view_batches'),
+    url(r'^regulations/', view_regulations, name='view_regulations'),
+    # url(r'^update_batch/(?P<batch_id>[0-9]+)/', update_batch, name='update_batch'),
+    # url(r'^delete_batch/(?P<batch_id>[0-9]+)/', mark_as_active_batch, name='mark_as_active_batch'),
+    url(r'^mark_as_active_batch/(?P<batch_id>[0-9]+)/', mark_as_active_batch, name='mark_as_active_batch'),
+    url(r'^delete_regulation/(?P<regulation_id>[0-9]+)/', delete_regulation, name='delete_regulation'),
     url(r'^delete_batch/(?P<batch_id>[0-9]+)/', delete_batch, name='delete_batch'),
     url(r'^hods/', view_hods, name='view_hods'),
     url(r'^un_assign_hod/(?P<staff_id>[0-9]+)/', un_assign_hod, name='un_assign_hod'),
@@ -15,5 +20,6 @@ urlpatterns = [
     url(r'^un_assign_pr/(?P<roll_no>[0-9]+)/', un_assign_pr, name='un_assign_pr'),
     url(r'^ajax/load_students_for_given_dep_batch/', load_students_for_given_dep_batch,
         name='ajax_load_students_for_given_dep_batch'),
+    url(r'^ajax_load_regulation_form', ajax_load_regulation_form, name='ajax_load_regulation_form'),
 
 ]

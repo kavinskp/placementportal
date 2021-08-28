@@ -1,100 +1,105 @@
-{% extends 'dashboard_content.html' %}
-{% block styles %}
-    <style>
-        .table-container {
-            margin-top: 100px;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px 0;
-        }
-    </style>
+{% extends 'dashboard/content.html' %}
+{% block content %}
+    {% with active_menu="college" active_tab="view_hods" %}
+            {{ block.super }}
+    {% endwith %}
 {% endblock %}
 {% block rightPanel %}
-    <div class="table-container">
-
-        <h2 class="text-center">View all department HODs Information</h2>
-
-        <hr class="my-3"/>
-        <div>
-            <table id="bootstrapdatatable" class="table table-bordered table-striped w-auto">
-                <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Department</th>
-                    <th>Name</th>
-                    <th>Staff Id</th>
-                    <th>Email</th>
-                    <th>Phone number</th>
-                    {% if perms.Curriculum.can_assign_hod %}
-                        <th></th>
-                    {% endif %}
-                </tr>
-                </thead>
-                <tbody>
-                {% if hods_info %}
-                    {% for each in hods_info %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ each.department }}</td>
-                            <td>{{ each.full_name }}</td>
-                            <td>{{ each.staff_id }}</td>
-                            <td>{{ each.user.email }}</td>
-                            <td>{{ each.user.profile.phone_number |default_if_none:"" }}</td>
-                            {% if perms.Curriculum.can_assign_hod %}
-                                <td><a href="{% url 'un_assign_hod' staff_id=each.staff_id %}">
-                                    <button type="button" class="btn btn-danger">Un Assign</button>
-                                </a></td>
-                            {% endif %}
-                        </tr>
-                    {% endfor %}
-                {% endif %}
-            </table>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                <div class="card">
+                    <div class="card-header fw-bold fs-4">
+                        Current Batches Information
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped data-table">
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Department</th>
+                                    <th>Name</th>
+                                    <th>Staff Id</th>
+                                    <th>Email</th>
+                                    <th>Phone number</th>
+                                    {% if perms.Curriculum.can_assign_hod %}
+                                        <th></th>
+                                    {% endif %}
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% if hods_info %}
+                                    {% for each in hods_info %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td>{{ each.department }}</td>
+                                            <td>{{ each.full_name }}</td>
+                                            <td>{{ each.staff_id }}</td>
+                                            <td>{{ each.user.email }}</td>
+                                            <td>{{ each.user.profile.phone_number |default_if_none:"" }}</td>
+                                            {% if perms.Curriculum.can_assign_hod %}
+                                                <td><a href="{% url 'un_assign_hod' staff_id=each.staff_id %}">
+                                                    <button type="button" class="btn btn-danger">Un Assign</button>
+                                                </a></td>
+                                            {% endif %}
+                                        </tr>
+                                    {% endfor %}
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-
         {% if perms.Curriculum.can_assign_hod %}
-            <br/>
-            <br/>
-            <h2 class="text-center">Allot HOD</h2>
-            <hr class="my-3"/>
-            <div class="container">
-                <form method="post" id="allotHODForm" data-staff-url="{% url 'ajax_load_faculties' %}">
-                    {% csrf_token %}
-                    <div class="row">
-                        <div class="col-sm-4">
-                            <label for="department" class="form-label">Department</label>
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <div class="card">
+                        <div class="card-header fw-bold fs-4">
+                            Assign HOD
                         </div>
-                        <div class="col-sm-8">
-                            <select id="department" name="dep_name">
-                                <option value="" disabled selected>-----</option>
-                                {% for dep in departments %}
-                                    <option value="{{ dep.name }}">{{ dep.full_name }}</option>
-                                {% endfor %}
-                            </select>
+                        <div class="card-body">
+                            <form method="post" id="allotHODForm" data-staff-url="{% url 'ajax_load_faculties' %}">
+                                {% csrf_token %}
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <label for="department" class="form-label">Department</label>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <select class="form-select" id="department" name="dep_name">
+                                            <option class="p-3" value="" disabled selected>-----</option>
+                                            {% for dep in departments %}
+                                                <option value="{{ dep.name }}">{{ dep.full_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <br/>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <label for="staffs_field" class="form-label">Staff</label>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <select class="form-select" id="staffs_field" name="staff_id" required>
+                                            <option value="" disabled selected>----</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <br/>
+                                <div class="row">
+                                    <div class="col-sm-4"></div>
+                                    <div class="col-sm-8">
+                                        <button type="submit" class="btn btn-primary btn-success">Allot as HOD</button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
-                    <br/>
-                    <div class="row">
-                        <div class="col-sm-4">
-                            <label for="staffs_field" class="form-label">Staff</label>
-                        </div>
-                        <div class="col-sm-8">
-                            <select class="form-select" id="staffs_field" name="staff_id">
-                                <option value="" disabled selected>----</option>
-                            </select>
-                        </div>
-                    </div>
-                    <br/>
-                    <div class="row">
-                        <div class="col-sm-4"></div>
-                        <div class="col-sm-8">
-                            <button type="submit" class="btn btn-primary btn-success">Allot as HOD</button>
-                        </div>
-                    </div>
-                </form>
+                </div>
             </div>
         {% endif %}
     </div>
-
 {% endblock %}
 
 

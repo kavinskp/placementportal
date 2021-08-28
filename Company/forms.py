@@ -2,9 +2,7 @@ from django.forms import ModelForm
 from django import forms
 from django.forms.widgets import RadioSelect
 
-from dal import autocomplete
-
-from Company.models import CompanyInfo, HRContactInfo, CompanyInterview, Criteria, JobRoles
+from Company.models import CompanyInfo, HRContactInfo, Criteria, CompanyJob
 from Accounts.views.utils import getInterviewAllowedBatches
 import re
 
@@ -12,9 +10,14 @@ import re
 class CompanyInfoForm(ModelForm):
     name = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Company Short Name'}))
-    fullName = forms.CharField(
+    full_name = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Company Full Name'}))
-    logo = forms.ImageField(required=False)
+    type = forms.ChoiceField(
+        choices=CompanyInfo.TYPES,
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
     website = forms.URLField(max_length=200,
                              initial="https://",
                              widget=forms.TextInput(
@@ -22,25 +25,16 @@ class CompanyInfoForm(ModelForm):
 
     class Meta:
         model = CompanyInfo
-        fields = ['name', 'fullName', 'website', 'type', 'logo', 'description']
+        fields = ['name', 'full_name', 'website', 'type', 'logo', 'description']
 
 
 class HRContactInfoForm(ModelForm):
-    first_name = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First name'}))
-    middle_name = forms.CharField(required=False,
-                                  widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Middle Name'}))
-    last_name = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'}))
-    designation = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Designation'}))
-    phoneNumber = forms.CharField(required=False,
-                                  widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone Name'}))
-    email = forms.EmailField(
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Email Address'}))
-
+    personal_title = forms.IntegerField(
+        widget=RadioSelect(
+            attrs={'class': 'radioChoice'}, choices=HRContactInfo.PERSONAL_TITLE))
     preferred_contact = forms.IntegerField(
-        widget=RadioSelect(attrs={'class': 'radioChoice'}, choices=HRContactInfo.PREF_CONTACT_TYPE))
+        widget=RadioSelect(
+            attrs={'class': 'radioChoice'}, choices=HRContactInfo.PREF_CONTACT_TYPE))
 
     def clean_phoneNumber(self):
         phoneno = self.cleaned_data.get('phoneNumber')
@@ -56,11 +50,27 @@ class HRContactInfoForm(ModelForm):
         fields = '__all__'
         exclude = ['company']
 
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First Name'}),
+            'middle_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Middle Name'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'}),
+            'designation': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Designation'}),
+            'phoneNumber': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone number'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email Id'}),
+            'preferred_contact': forms.RadioSelect(
+                attrs={'class': 'form-radio', 'placeholder': 'Preferred Contact Type'})
+        }
+
 
 class RoleInfoForm(ModelForm):
 
+    def __init__(self, *args, **kwargs):
+        company_id = kwargs.pop('company_id', '')
+        super(RoleInfoForm, self).__init__(*args, **kwargs)
+        self.fields['criteria'] = forms.ModelChoiceField(queryset=Criteria.objects.filter(company_id=company_id))
+
     class Meta:
-        model = JobRoles
+        model = CompanyJob
         fields = '__all__'
         exclude = ['company']
 
@@ -68,7 +78,7 @@ class RoleInfoForm(ModelForm):
 class JobCriteriaForm(ModelForm):
     batch = forms.ModelMultipleChoiceField(
         queryset=getInterviewAllowedBatches(),
-        widget=autocomplete.ModelSelect2Multiple()
+        widget=forms.SelectMultiple()
     )
 
     class Meta:

@@ -1,0 +1,67 @@
+<tr>
+    <td>
+        <input type="checkbox"
+               name="{% if approve_list %}new_user{% else %}existing_user{% endif %}"
+               value="{{ user.user_id }}">
+        {{ forloop.counter }}
+    </td>
+    <td>{{ user.full_name }}</td>
+    <td>{{ user.user.email }}</td>
+    {% if user.user.get_user_type_display == 'Staff' %}
+        <td>{{ user.get_id }}</td>
+        <td>{{ user.get_designation_display }}</td>
+        <td>{{ user.department }}</td>
+    {% elif user.user.get_user_type_display == 'Student' %}
+        <td>{{ user.get_id }}</td>
+        <td>
+            {{ user.info.batch.regulation }}
+            {% if not user.info.batch.active %}
+                <span><i class="bi bi-exclamation-triangle-fill mx-3 text-danger" data-toggle="tooltip"
+                         title="In active batch"></i></span>
+            {% endif %}
+        </td>
+        <td>{{ user.info.batch.department }}</td>
+    {% elif user.user.get_user_type_display == 'Interviewer' %}
+        <td>{{ user.company_info }}</td>
+        <td>
+            {#            <a class="btn btn-primary company-info-toggle-btn" type="button"#}
+            {#               data-url="{% url 'ajax_load_company_details' %}"#}
+            {#               data-company-id="{{ user.company_info.pk }}"#}
+            {#               data-toggle="modal"#}
+            {#               href="#view_roles_{{ user.company_info.pk }}"#}
+            {#               data-bs-target="#view_roles_{{ user.company_info.pk }}">#}
+            {#                <i class="bi bi-eye-fill"></i>#}
+            {#            </a>#}
+
+            <!-- Button trigger modal -->
+            <button type="button" class="btn btn-secondary company-info-toggle-btn" data-bs-toggle="modal"
+                    data-company-id="{{ user.company_info.pk }}"
+                    data-url="{% url 'ajax_load_company_details' %}"
+                    data-bs-target="#view_roles_{{ user.company_info.pk }}">
+                <i class="bi bi-eye-fill"></i>
+            </button>
+
+            <!-- Modal -->
+            <div class="modal fade" id="view_roles_{{ user.company_info.pk }}" tabindex="-1"
+                 aria-labelledby="exampleModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Company Job Info
+                                - {{ user.company_info }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row col-sm-12" id="company_info_{{ user.company_info.pk }}">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </td>
+    {% endif %}
+</tr>

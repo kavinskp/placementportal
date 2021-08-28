@@ -23,7 +23,7 @@ SECRET_KEY = '_wih2(72-$yjk$n09o)6y%15w55+jt6*n@!h#vg5*at3d0957q'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-EMAIL_VERIFICATION = True
+EMAIL_VERIFICATION = False
 
 ALLOWED_HOSTS = []
 
@@ -38,10 +38,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'dal',
     'dal_select2',
-    'Accounts',
     'Dashboard',
     'Company',
     'Curriculum',
+    'Accounts',
+    'Interview',
+    'schedule',
+    'Recruiter',
+    'Resources',
 ]
 
 MIDDLEWARE = [

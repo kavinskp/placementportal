@@ -23,7 +23,10 @@ urlpatterns = [
     url(r'^', include('Accounts.urls')),
     url(r'^', include('Dashboard.urls')),
     url(r'^', include('Company.urls')),
+    url(r'^', include('Interview.urls')),
     url(r'^', include('Curriculum.urls')),
+    url(r'^', include('Recruiter.urls')),
+    url(r'^', include('Resources.urls')),
 ]
 
 if settings.DEBUG:

@@ -7,8 +7,6 @@ import re
 from PlacementPortal import settings
 from Accounts.models import UserProfile, StaffAccount, CustomUser, GENDER_CHOICES
 from Curriculum.models import StudentInfo
-from Company.models import CompanyInfo
-
 
 class LoginForm(forms.Form):
     email = forms.CharField(max_length=256)

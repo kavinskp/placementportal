@@ -5,14 +5,6 @@
 {% block body %}{% endblock %}
 {% block form_content2 %}
     <div class="box-section">
-        {% if messages %}
-            <div class="alert alert-success">
-                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                {% for msg in  messages %}
-                    <strong>{{ msg }}<br/></strong>
-                {% endfor %}
-            </div>
-        {% endif %}
         <form id="update_role_form" enctype="multipart/form-data" method="post">
             <h2 class="text-center">{{ title }}</h2>
             <hr class="my-3"/>
@@ -25,7 +17,7 @@
                         <div class="row">
                             <div class="col-sm-4 text-sm-end">
                                 {{ field.label_tag }}
-                                {% if field.required %}
+                                {% if field.field.required %}
                                     <span class="required" style="color: red">*</span>
                                 {% endif %}
                             </div>
@@ -57,7 +49,7 @@
 {% block scripts %}
     <script>
         $(".close_window").click(function () {
-            var url = "page url you want to go back";//back page url
+            var url = "{% url 'create_roles' company_id %}";
             var objWindow = window.open(url, "_self");
             objWindow.close();
         });

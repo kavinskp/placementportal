@@ -25,7 +25,7 @@
                         <div class="row">
                             <div class="col-sm-4 text-sm-end">
                                 {{ field.label_tag }}
-                                {% if field.required %}
+                                {% if field.field.required %}
                                     <span class="required" style="color: red">*</span>
                                 {% endif %}
                             </div>

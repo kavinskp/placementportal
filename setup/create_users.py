@@ -1,11 +1,17 @@
 from django.contrib.auth.models import Group
 from Curriculum.models import Department, Batch, StudentInfo
-from Accounts.models import CustomUser, StaffAccount, StudentAccount, UserProfile, UserType, UserGroups
+from Accounts.models import CustomUser, StaffAccount, StudentAccount, UserProfile, UserType, UserGroups, \
+    InterviewerAccount
+from Company.models import CompanyJob, Criteria, HRContactInfo, CompanyInfo
 import random
 
+UserProfile.objects.all().delete()
 CustomUser.objects.all().delete()
 StaffAccount.objects.all().delete()
 StudentAccount.objects.all().delete()
+StudentInfo.objects.all().delete()
+StudentAccount.objects.all().delete()
+InterviewerAccount.objects.all().delete()
 
 p_email = 'p1@test.com'
 p_password = 'p12345'
@@ -28,8 +34,6 @@ StaffAccount.objects.create(department=Department.objects.get(name='General'),
                             user=p_user,
                             staff_id='1',
                             )
-p_user.has_filled_profile = True
-p_user.account_created = True
 p_user.is_approved = True
 p_user.save()
 group = Group.objects.get(name=UserGroups.PRINCIPAL.group_name())
@@ -92,7 +96,6 @@ custom_users_set = (
 for c_user in custom_users_set:
     hod_user = CustomUser.objects.create_user(email=c_user[0], password=c_user[1], user_type=c_user[2].value)
     hod_user.is_verified = True
-    hod_user.has_filled_profile = False
     hod_user.save()
 
 hod_users_set = (
@@ -135,8 +138,6 @@ for hod in hod_users_set:
                                 user=hod_user,
                                 staff_id=hod[4],
                                 )
-    hod_user.has_filled_profile = True
-    hod_user.account_created = True
     hod_user.save()
     group = Group.objects.get(name=UserGroups.FACULTY.group_name())
     group.user_set.add(hod_user)
@@ -197,8 +198,6 @@ for faculty in faculty_users_set:
                                 user=f_user,
                                 staff_id=faculty[4],
                                 )
-    f_user.has_filled_profile = True
-    f_user.account_created = True
     f_user.save()
     group = Group.objects.get(name=UserGroups.FACULTY.group_name())
     group.user_set.add(f_user)
@@ -302,7 +301,6 @@ for profile in student_users_profile_set:
                                       avatar=ava
                                       )
     s_user.profile = prof
-    s_user.has_filled_profile = True
     s_user.save()
     print('Profile Created ' + s_user.email)
 
@@ -416,17 +414,90 @@ for i_student in student_info_set:
         roll_no=roll_no,
         is_hosteler=i_student[6],
         x_year=i_student[4],
-        xii_year=i_student[5],
+        x11_year=i_student[5],
         x_percentage=x_perc,
-        xii_percentage=xii_prec,
+        x11_percentage=xii_prec,
         cgpa=cgpa,
         current_backlogs=curr_blg,
-        history_of_backlog=hist_blg
+        history_of_backlogs=hist_blg
     )
 
     StudentAccount.objects.create(user=user_obj, info=st_info)
-    user_obj.account_created = True
-    user_obj.save()
     group = Group.objects.get(name=UserGroups.STUDENT.group_name())
     group.user_set.add(user_obj)
     print('Student Created ' + user_obj.email)
+
+recruit_users_profile_set = (
+    ('hr1@test.com', 'M', '1976-01-01', 'Jagan', 'R', 9874561230),
+    ('hr2@test.com', 'M', '1986-02-01', 'Kannan', 'K'),
+    ('hr3@test.com', 'M', '1993-03-01', 'Dhamothiran', 'V', 987651234),
+    ('hr4@test.com', 'F', '1991-04-01', 'Cynthia', 'K'),
+    ('hr5@test.com', 'F', '1987-05-01', 'Jacquline', 'D'),
+    ('hr6@test.com', 'F', '1995-01-06', 'Kaviya', 'D'),
+)
+
+for profile in recruit_users_profile_set:
+    i_user = CustomUser.objects.get(email=profile[0])
+    ava = None
+    if profile[1] == 'M':
+        ava = 'user-profile-pic/recruiter_male.png'
+    else:
+        ava = 'user-profile-pic/recruiter_female.png'
+
+    phone = None
+    last_name = profile[len(profile) - 1]  # if phone number is not given
+    try:
+        phone = int(profile[len(profile) - 1])
+        last_name = profile[len(profile) - 2]
+    except ValueError:
+        pass
+    midd = None
+    if len(profile) > 5:
+        if len(profile) == 7:  # both number & m_name available
+            midd = profile[4]
+        elif phone is None:  # only m_name available so len=6
+            midd = profile[4]
+
+    prof = UserProfile.objects.create(gender=profile[1],
+                                      first_name=profile[3],
+                                      last_name=last_name,
+                                      dob=profile[2],
+                                      middle_name=midd,
+                                      phone_number=phone,
+                                      avatar=ava
+                                      )
+    i_user.profile = prof
+    i_user.save()
+    print('Profile Created ' + i_user.email)
+
+execfile('setup/setup_company_info.py')
+
+recruit_users_set = (
+    ('hr1@test.com', 'ZOHO', False),
+    ('hr2@test.com', 'Infosys', False),
+    ('hr3@test.com', 'Accolite', False),
+    ('hr4@test.com', 'Sirius', False),
+    ('hr5@test.com', 'Amazon', True),
+    ('hr6@test.com', 'Accenture', True),
+)
+
+for i_account in recruit_users_set:
+    user_obj = CustomUser.objects.get(email=i_account[0])
+    c_info = CompanyInfo.objects.get(name=i_account[1])
+    InterviewerAccount.objects.create(user=user_obj, company_info=c_info)
+    group = Group.objects.get(name=UserGroups.RECRUITER.group_name())
+    group.user_set.add(user_obj)
+    if i_account[2]:
+        HRContactInfo.objects.create(
+            company=c_info,
+            email=user_obj.email,
+            phoneNumber=user_obj.profile.phone_number,
+            designation='HR',
+            personal_title=1 if user_obj.profile.gender == 'M' else 2,
+            first_name=user_obj.profile.first_name,
+            last_name=user_obj.profile.last_name,
+            middle_name=user_obj.profile.middle_name,
+            preferred_contact=2 if user_obj.profile.phone_number is not None else 1
+        )
+        print('HR added for ' + c_info.name)
+    print('Recruiter Created ' + user_obj.email)

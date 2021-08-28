@@ -1,46 +1,46 @@
-{% extends 'dashboard_content.html' %}
-{% block styles %}
-    <style>
-        .table-container {
-            margin-top: 100px;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px 0;
-        }
-    </style>
+{% extends 'dashboard/content.html' %}
+{% block content %}
+    {% with active_menu="college" active_tab="view_all_prs" %}
+        {{ block.super }}
+    {% endwith %}
 {% endblock %}
 {% block rightPanel %}
-
-    <div class="table-container">
-
-        <h2 class="text-center">Placement Representative Details </h2>
-
-
-        <hr class="my-3"/>
-        <div>
-            <table id="bootstrapdatatable" class="table table-bordered table-striped w-auto">
-                <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Batch</th>
-                    <th>Department</th>
-                    <th>Email</th>
-                    <th>Phone number</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for each in prs_info %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ each.full_name }}</td>
-                        <td>{{ each.batch }}</td>
-                        <td>{{ each.department }}</td>
-                        <td>{{ each.user.email }}</td>
-                        <td>{{ each.user.profile.phone_number |default_if_none:"" }}</td>
-                    </tr>
-                {% endfor %}
-            </table>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                <div class="card">
+                    <div class="card-header fw-bold fs-4">
+                        Placement Representative
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped data-table">
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Batch</th>
+                                    <th>Department</th>
+                                    <th>Email</th>
+                                    <th>Phone number</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for each in prs_info %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ each.full_name }}</td>
+                                        <td>{{ each.batch }}</td>
+                                        <td>{{ each.department }}</td>
+                                        <td>{{ each.user.email }}</td>
+                                        <td>{{ each.user.profile.phone_number |default_if_none:"" }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

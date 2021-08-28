@@ -16,16 +16,18 @@
         {% for field in form %}
             <div class="form-group">
                 <div class="row">
-                    {{ field }}
-                    {% for error in field.errors %}
-                        <small style="color: red">{{ error }}</small>
-                    {% endfor %}
+                    <div class="m-2 p-1">
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <small style="color: red">{{ error }}</small>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         {% endfor %}
-
-        <button type="submit" name="signup" class="btn btn-primary btn-block">Signup</button>
-
+        <div class="d-grid gap-2 mx-auto">
+            <button type="submit" name="signup" class="btn btn-primary">Signup</button>
+        </div>
         <hr class="my-3"/>
         <small>Already have account? Click here to <a href="{% url 'login' %}"> Login</a></small>
     </form>

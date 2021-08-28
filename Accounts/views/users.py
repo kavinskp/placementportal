@@ -13,6 +13,7 @@ from django.contrib.auth.decorators import login_required
 from Accounts.forms import *
 from Accounts.models import UserType, StaffAccount, StudentAccount, InterviewerAccount
 from PlacementPortal.settings import EMAIL_VERIFICATION
+from Accounts.views.utils import create_student_account, create_staff_account
 
 # Create your views here.
 INTERVIEWER = 'Interviewer'
@@ -142,6 +143,10 @@ def login_user(request):
                         elif user_obj.is_approved:
                             if user_obj.is_active:
                                 login(request, user_obj, backend='Accounts.backends.CustomUserAuth')
+                                if user_obj.user_type == UserType.INTERVIEWER.value:
+                                    interviewer_acc = InterviewerAccount.objects.get(user=user_obj)
+                                    request.session['company_id'] = interviewer_acc.company_info.pk
+
                                 if 'remember_me' in request.POST:
                                     request.session['remember_me'] = True
                                 else:
@@ -157,7 +162,7 @@ def login_user(request):
                             msg = {
                                 'page_title': 'Placement | Login Error',
                                 'title': 'Not Approved',
-                                'description': ['User is not yet approved!!']
+                                'description': ['You need approval to access this page!']
                             }
                         return render(request, 'prompt_pages.html', {'message': msg})
                     else:
@@ -203,7 +208,6 @@ def update_profile_pre_approval(request):
                     profile_obj = form.save()
                     user_obj = CustomUser.objects.get(email=user_name)
                     user_obj.profile = profile_obj
-                    user_obj.has_filled_profile = True
                     user_obj.save()
                     return redirect('update_profile_pre_approval')
             elif form_name == 'StaffAccountForm':
@@ -211,28 +215,13 @@ def update_profile_pre_approval(request):
                 if form.is_valid():
                     staff_obj = form.save(commit=False)
                     user_obj = CustomUser.objects.get(email=user_name)
-                    group = Group.objects.get(name='Faculty')
-                    group.user_set.add(user_obj)
-                    staff_obj.user = user_obj
-                    staff_obj.save()
-                    user_obj.account_created = True
-                    user_obj.save()
+                    create_staff_account(user_obj, staff_obj)
             elif form_name == 'StudentInfoForm':
                 form = StudentInfoForm(request.POST)
                 if form.is_valid():
                     student_info = form.save()
                     user_obj = CustomUser.objects.get(email=user_name)
-                    if StudentAccount.objects.filter(user=user_obj):
-                        raise forms.ValidationError('Account Already Exists')
-                    else:
-                        StudentAccount.objects.create(
-                            user=user_obj,
-                            info=student_info
-                        )
-                    group = Group.objects.get(name='Student')
-                    group.user_set.add(user_obj)
-                    user_obj.account_created = True
-                    user_obj.save()
+                    create_student_account(user_obj, student_info)
             else:
                 return redirect('login')
             msg = {

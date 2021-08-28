@@ -1,0 +1,132 @@
+<table class="table table-striped" role="table">
+    <thead>
+    <tr>
+        <th>#</th>
+        <th>Role Name</th>
+        <th>Job Type</th>
+        <th>Vacancy</th>
+        <th>Location</th>
+        <th>Package</th>
+        <th>Salary Description</th>
+        <th>Bond Description</th>
+        <th>Documents</th>
+        <th>Batches</th>
+        <th>Criteria</th>
+
+    </tr>
+    </thead>
+    <tbody>
+    {% for job in jobs %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td><b> {{ job.role_name }}</b></td>
+            <td>{{ job.get_type_display }}</td>
+            <td>{{ job.vacancy| default_if_none:"" }}</td>
+            <td>{{ job.location| default_if_none:"" }}</td>
+            <td>{{ job.package }}</td>
+            <td>{{ job.salary_description | default_if_none:"" }}</td>
+            <td>{{ job.bond_description | default_if_none:"" }}</td>
+
+            <td>
+                {% if job.documents %}
+                    <a target="_blank"
+                       href="/media/{{ job.documents }}">View</a>
+                {% endif %}
+            </td>
+            {#            <td>#}
+            {#                <!-- Button trigger modal -->#}
+            {#                <button type="button" class="btn btn-secondary" data-bs-toggle="modal"#}
+            {#                        data-bs-target="#otherinfo_{{ job.criteria.pk }}">#}
+            {#                    View#}
+            {#                </button>#}
+            {##}
+            {#                <!-- Modal -->#}
+            {#                <div class="modal fade" id="otherinfo_{{ job.criteria.pk }}" tabindex="-1"#}
+            {#                     aria-labelledby="otherinfo_lablel_{{ job.criteria.pk }}"#}
+            {#                     aria-hidden="true">#}
+            {#                    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">#}
+            {#                        <div class="modal-content">#}
+            {#                            <div class="modal-header bg-dark text-white">#}
+            {#                                <h5 class="modal-title" id="otherinfo_lablel_{{ job.criteria.pk }}">Additional#}
+            {#                                    Informations</h5>#}
+            {#                            </div>#}
+            {#                            <div class="modal-body bg-info">#}
+            {#                                <table>#}
+            {#                                    <tr>#}
+            {#                                        <th>Salary Description</th>#}
+            {#                                        <td>{{ job.salary_description | default_if_none:"" }}</td>#}
+            {#                                    </tr>#}
+            {#                                    <tr>#}
+            {#                                        <th>Bond Description</th>#}
+            {#                                        <td>{{ job.bond_description | default_if_none:"" }}</td>#}
+            {#                                    </tr>#}
+            {#                                    <tr>#}
+            {#                                        <th>Documents</th>#}
+            {#                                        <td>#}
+            {#                                            {% if job.documents %}#}
+            {#                                                <a target="_blank"#}
+            {#                                                   href="/media/{{ job.documents }}">View</a>#}
+            {#                                            {% endif %}#}
+            {#                                        </td>#}
+            {#                                    </tr>#}
+            {#                                </table>#}
+            {#                            </div>#}
+            {#                        </div>#}
+            {#                    </div>#}
+            {#                </div>#}
+            {#            </td>#}
+
+            <td>
+                <!-- Button trigger modal -->
+                <button type="button" class="btn btn-secondary" data-bs-toggle="modal"
+                        data-bs-target="#criteria_batch_{{ job.criteria.pk }}">
+                    # {{ job.criteria.get_allowed_batches | length }}
+                </button>
+
+                <!-- Modal -->
+                <div class="modal fade" id="criteria_batch_{{ job.criteria.pk }}" tabindex="-1"
+                     aria-labelledby="criteria_batch_label_{{ job.criteria.pk }}"
+                     aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-dark text-white">
+                                <h5 class="modal-title" id="criteria_batch_label_{{ job.criteria.pk }}">Allowed
+                                    Batches</h5>
+                            </div>
+                            <div class="modal-body bg-info">
+                                {{ job.criteria.get_allowed_batch_html | safe }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </td>
+            <td>
+                <!-- Button trigger modal -->
+                <button type="button" class="btn btn-secondary" data-bs-toggle="modal"
+                        data-bs-target="#criteria_info_{{ job.criteria.pk }}">
+                    {{ job.criteria }}
+                </button>
+
+                <!-- Modal -->
+                <div class="modal fade" id="criteria_info_{{ job.criteria.pk }}" tabindex="-1"
+                     aria-labelledby="criteria_info_label_{{ job.criteria.pk }}"
+                     aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-dark text-white">
+                                <h5 class="modal-title" id="criteria_info_label_{{ job.criteria.pk }}">Criteria</h5>
+                            </div>
+                            <div class="modal-body bg-info">
+                                {{ job.criteria.display | safe }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

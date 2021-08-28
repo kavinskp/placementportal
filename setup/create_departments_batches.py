@@ -33,21 +33,23 @@ regulation_set = (
 )
 
 for reg in regulation_set:
+    start_year = reg[0]
+    current_yr = start_year - 2018
+    if current_yr < 0:
+        current_yr = -1 * current_yr
+    curr_sem = (current_yr * 2) - 1
     Regulation.objects.create(start_year=reg[0],
                               programme_period=reg[1],
-                              programme=reg[2])
+                              programme=reg[2],
+                              current_semester=curr_sem)
 
 print('Regulations created')
 
 
 def create_batch(dep, reg):
-    current_yr = reg.start_year - 2018
-    if current_yr < 0:
-        current_yr = -1 * current_yr
-    curr_sem = (current_yr * 2) - 1
     batch = Batch.objects.create(department=dep,
                                  regulation=reg,
-                                 current_semester=curr_sem)
+                                 interview_allowed=True if reg.current_semester >= 7 else False)
     print("Batch Created " + str(dep) + " : " + str(batch))
 
 

@@ -1,6 +1,31 @@
 from django.contrib.auth.models import Group
-from Accounts.models import StaffAccount, StudentAccount
-from Curriculum.models import Department,Batch
+from Accounts.models import StaffAccount, StudentAccount, InterviewerAccount, UserGroups
+from Curriculum.models import Department, Regulation, Batch
+
+
+def create_student_account(user_obj, student_info):
+    StudentAccount.objects.create(
+        user=user_obj,
+        info=student_info
+    )
+    group = Group.objects.get(name=UserGroups.STUDENT.value)
+    group.user_set.add(user_obj)
+
+
+def create_staff_account(user_obj, staff_obj):
+    group = Group.objects.get(name=UserGroups.FACULTY.value)
+    group.user_set.add(user_obj)
+    staff_obj.user = user_obj
+    staff_obj.save()
+
+
+def create_interviewer_account(user_obj, company_info):
+    InterviewerAccount.objects.create(
+        user=user_obj,
+        company_info=company_info
+    )
+    group = Group.objects.get(name=UserGroups.RECRUITER.value)
+    group.user_set.add(user_obj)
 
 
 def getHODsOrderByName(is_active=True):
@@ -63,9 +88,17 @@ def getPlacementOfficers(is_active=True):
     return StaffAccount.objects.filter(user__groups=group, user__is_active=is_active)
 
 
+def getActiveRegulation():
+    return Regulation.objects.filter(active=True)
+
+
 def getActiveDepartments():
     return Department.objects.all().exclude(name='General')
 
 
 def getInterviewAllowedBatches():
-    return Batch.objects.filter(current_semester__gte=7, in_active=False)
+    return Batch.objects.filter(interview_allowed=True)
+
+
+def getBatches():
+    return Batch.objects.filter(interview_allowed=True)

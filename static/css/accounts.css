@@ -1,0 +1,20 @@
+.form-container {
+    position: absolute;
+    top: 10vh;
+    background: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px 0;
+}
+
+.box-row {
+    padding: 100px;
+    align-items: center;
+}
+
+.box-section {
+    position: inherit;
+    border-radius: 30px;
+    padding: 100px;
+    background: #d0d0d0;
+}

@@ -1,0 +1,153 @@
+{% extends 'dashboard/content.html' %}
+{% block content %}
+    {% with active_menu="interview" active_tab="manage_companies" active_page="view_students" %}
+        {{ block.super }}
+    {% endwith %}
+{% endblock %}
+{% block rightPanel %}
+    <div class="container-fluid p-2">
+        {% for job  in jobs %}
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <div class="card">
+                        <div class="card-header fw-bold fs-4">
+                            <span class="mx-3" style="color: #6f42c1"><i
+                                    class="bi bi-box-seam"></i>  Role - {{ job.name }} </span>
+                        </div>
+                        <div class="card-body">
+                            {% if interested_students %}
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <div class="card">
+                                            <div class="card-header fw-bold fs-4">
+                                                Enrolled Students
+                                            </div>
+                                            <div class="card-body">
+                                                <form method="POST" class="form-inline">{% csrf_token %}
+
+                                                    <div class="table-responsive">
+                                                        <table class="table table-striped data-table">
+                                                            <thead>
+                                                            <tr>
+                                                                <th>#</th>
+                                                                <th>Name</th>
+                                                                <th>Roll No</th>
+                                                                <th>Batch</th>
+                                                                <th></th>
+                                                            </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            {% for student_i in job.interested_students %}
+                                                                <tr>
+                                                                    <td>
+                                                                        <input type="checkbox"
+                                                                               name="block_students"
+                                                                               value="{{ student_i }}">
+                                                                        {{ forloop.counter }}
+                                                                    </td>
+                                                                    <td>{{ student_i.student.user.full_name }}</td>
+                                                                    <td>{{ student_i.student.user.get_id }}</td>
+                                                                    <td>{{ student_i.student.info.batch }}</td>
+                                                                    <td>
+                                                                        {{ student_i.get_applied_display }}
+                                                                    </td>
+                                                                </tr>
+                                                            {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <div class="row" style="padding: 10px">
+                                                        <div class="col-sm-2"></div>
+                                                        <div class="col-sm-3">
+                                                            <button type="submit" name="approve"
+                                                                    class="btn btn-success">Approve
+                                                            </button>
+                                                        </div>
+                                                        <div class="col-sm-2"></div>
+                                                        <div class="col-sm-3">
+                                                            <button type="submit" name="delete" class="btn btn-danger">
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                        <div class="col-sm-2"></div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <div class="card">
+                                            <div class="card-header fw-bold fs-4">
+                                                Eligible Students
+                                            </div>
+                                            <div class="card-body">
+                                                {#                                                <form method="POST" class="form-inline">{% csrf_token %}#}
+
+                                                <div class="table-responsive">
+                                                    <table class="table table-striped data-table">
+                                                        <thead>
+                                                        <tr>
+                                                            <th>#</th>
+                                                            <th>Name</th>
+                                                            <th>Roll No</th>
+                                                            <th>Batch</th>
+                                                            <th>CGPA</th>
+                                                            <th>Existing Backlogs</th>
+                                                            <th>History of Backlogs</th>
+                                                            <th>10th %</th>
+                                                            <th>12th %</th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        {% for student_i in job.eligible_students %}
+                                                            <tr>
+                                                                <td>
+                                                                    {#                                                                        <input type="checkbox"#}
+                                                                    {#                                                                               name="block_students"#}
+                                                                    {#                                                                               value="{{ student_i }}">#}
+                                                                    {{ forloop.counter }}
+                                                                </td>
+                                                                <td>{{ student_i.user.full_name }}</td>
+                                                                <td>{{ student_i.get_id }}</td>
+                                                                <td>{{ student_i.info.batch }}</td>
+                                                                <td>{{ student_i.info.cgpa }}</td>
+                                                                <td>{{ student_i.info.current_backlogs }}</td>
+                                                                <td>{{ student_i.info.history_of_backlogs }}</td>
+                                                                <td>{{ student_i.info.x_percentage }}</td>
+                                                                <td>{{ student_i.info.x11_percentage }}</td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                {#                                                    <div class="row" style="padding: 10px">#}
+                                                {#                                                        <div class="col-sm-2"></div>#}
+                                                {#                                                        <div class="col-sm-3">#}
+                                                {#                                                            <button type="submit" name="approve"#}
+                                                {#                                                                    class="btn btn-success">Approve#}
+                                                {#                                                            </button>#}
+                                                {#                                                        </div>#}
+                                                {#                                                        <div class="col-sm-2"></div>#}
+                                                {#                                                        <div class="col-sm-3">#}
+                                                {#                                                            <button type="submit" name="delete" class="btn btn-danger">#}
+                                                {#                                                                Delete#}
+                                                {#                                                            </button>#}
+                                                {#                                                        </div>#}
+                                                {#                                                        <div class="col-sm-2"></div>#}
+                                                {#                                                    </div>#}
+                                                {#                                                </form>#}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

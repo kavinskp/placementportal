@@ -1,5 +1,5 @@
 from django.contrib.auth.models import Group, Permission, ContentType
-from Accounts.models import UserGroups, UserPermissions, CustomUser, StaffAccount, StudentAccount
+from Accounts.models import UserGroups, UserPermissions, CustomUser, StaffAccount, StudentAccount, InterviewerAccount
 from Curriculum.models import Batch, Department
 
 Group.objects.all().delete()
@@ -20,6 +20,8 @@ permission_set = (
     (UserPermissions.CAN_ASSIGN_PO, StaffAccount),
     (UserPermissions.CAN_ASSIGN_PR, StudentAccount),
     (UserPermissions.CAN_ASSIGN_POC, StudentAccount),
+    (UserPermissions.CAN_SCHEDULE_INTERVIEW, CustomUser),
+    (UserPermissions.CAN_UPDATE_COMPANY_DETAILS, InterviewerAccount)
 )
 for permission in permission_set:
     ContentType.objects.get_or_create(app_label=permission[0].get_app_label(), model=permission[1].__name__)
@@ -43,6 +45,9 @@ group_permission_set = (
     (UserGroups.PRINCIPAL, UserPermissions.CAN_ASSIGN_PO),
     (UserGroups.HOD, UserPermissions.CAN_ASSIGN_PR),
     (UserGroups.PLACEMENT_OFFICER, UserPermissions.CAN_ASSIGN_POC),
+    (UserGroups.PLACEMENT_OFFICER, UserPermissions.CAN_SCHEDULE_INTERVIEW),
+    (UserGroups.PLACEMENT_REPRESENTATIVE, UserPermissions.CAN_SCHEDULE_INTERVIEW),
+    (UserGroups.RECRUITER, UserPermissions.CAN_UPDATE_COMPANY_DETAILS)
 )
 
 for perm in group_permission_set:

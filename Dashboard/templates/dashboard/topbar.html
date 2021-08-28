@@ -1,0 +1,56 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+        <!-- sidebar trigger -->
+        <button class="navbar-toggler me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample"
+                aria-controls="offcanvasExample">
+            <span class="navbar-toggler-icon" data-bs-target="#offcanvasExample"></span>
+        </button>
+        <!-- sidebar trigger end -->
+
+        <a class="navbar-brand fw-bold text-uppercase me-auto" href="{% url 'index' %}">Placement Portal</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            {#            <form class="d-flex">#}
+            {#                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">#}
+            {#                <button class="btn btn-outline-success" type="submit">Search</button>#}
+            {#            </form>#}
+
+            <ul class="navbar-nav mb-2 mb-lg-0 ms-auto">
+                {#                <li class="nav-item">#}
+                {#                    <a class="nav-link">About</a>#}
+                {#                </li>#}
+
+                <li class="mx-2 nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="me-3"><i class="bi bi-person-fill"></i></span>
+                        <span> {{ request.user.profile.full_name }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <li style="padding: 10px;">
+                            <img class="img-thumbnail" src="{{ MEDIA_ROOT }}{{ request.user.profile.get_profile_pic }}">
+                        </li>
+                        <li>
+                            <a href="{% url 'view_profile' %}" class="dropdown-item">
+                                <span><i class="bi bi-person-circle"></i></span>
+                                <span class="mx-2">Profile</span>
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a href="{% url 'logout' %}" class="dropdown-item">
+                                <span><i class="bi bi-box-arrow-left"></i></span>
+                                <span class="mx-2 text-danger">Logout</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
