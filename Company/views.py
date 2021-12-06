@@ -1,12 +1,12 @@
 from django import forms
 from django.contrib import messages
 from django.http import FileResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 
 from Accounts.models import InterviewerAccount
 from Accounts.views.utils import create_interviewer_account
-from .forms import CompanyInfoForm, HRContactInfoForm, RoleInfoForm, JobCriteriaForm
-from .models import CompanyInfo, CompanyJob, HRContactInfo, Criteria
+from .forms import CompanyInfoForm, HRContactInfoForm, RoleInfoForm, JobCriteriaForm, RoundInfoForm
+from .models import CompanyInfo, CompanyJob, HRContactInfo, Criteria, RoundInfo, PreferenceSchedulePeriod
 from Curriculum.models import Batch
 
 
@@ -67,8 +67,35 @@ def add_hr_info(request, company_id=None):
 
 
 def delete_recruiter(request, company_id, recruiter_id):
-    HRContactInfo.objects.get(pk=recruiter_id).delete()
+    hr = HRContactInfo.objects.get(pk=recruiter_id)
+    hr.delete()
+    msg = "Recruiter " + str(hr.full_name()) + " removed !"
+    messages.success(request, msg)
+    if request.GET.get('next') is not None:
+        return redirect(request.GET.get('next'))
     return redirect('add_hr_info', company_id)
+
+
+def add_recuiter(request, company_id):
+    if request.method == 'POST':
+        form = HRContactInfoForm(request.POST)
+        try:
+            if form.is_valid():
+                hr = form.save(commit=False)
+                hr.company = CompanyInfo.objects.get(pk=company_id)
+                hr.save()
+                msg = "Recruiter " + str(hr.full_name()) + " added !"
+                if request.GET.get('next') is not None:
+                    return redirect(request.GET.get('next'))
+                messages.success(request, msg)
+                return redirect('add_hr_info', company_id=company_id)
+            else:
+                error = ["Please Enter correct Details!!"]
+        except forms.ValidationError as e:
+            error = [str(e)]
+    else:
+        form = HRContactInfoForm()
+    return redirect('ajax_load_regulation_form', company_id)
 
 
 def create_roles(request, company_id):
@@ -251,7 +278,7 @@ def ajax_load_company_details(request):
     company_id = request.GET.get('company_id')
     company_info = CompanyInfo.objects.get(pk=company_id)
     jobs = CompanyJob.objects.filter(company_id=company_id)
-    return render(request, 'company_job_info.html', {
+    return render(request, 'ajax_load_company_job_info_in_table.html', {
         'company_info': company_info,
         'jobs': jobs
     })
@@ -261,3 +288,116 @@ def ajax_get_allowed_batches_for_job(request):
     criteria_id = request.GET.get('job_id')
     criteria = Criteria.objects.get(pk=criteria_id)
     return criteria.get_allowed_batch_html()
+
+
+def ajax_load_round_info_form(request):
+    round_id = request.GET.get('round_info_id', None)
+    if round_id is None:
+        company_id = request.GET.get('company_id')
+        form = RoundInfoForm()
+        return render(request, 'ajax_load_form_in_div.html', {
+            'form': form,
+            'action_url': '/view_company_info/' + str(company_id) + '/',
+            'submit_name': 'add_round_info',
+        })
+    else:
+        entry = get_object_or_404(RoundInfo, pk=round_id)
+        form = RoundInfoForm(instance=entry)
+        return render(request, 'ajax_load_form_in_div.html', {
+            'form': form,
+            'action_url': '/view_company_info/' + str(entry.company_id) + '/',
+            'submit_name': 'edit_round_info',
+            'id': round_id
+        })
+
+
+def delete_round_info(request, round_info_id):
+    round = RoundInfo.objects.get(pk=round_info_id)
+    company_id = round.company_id
+    round.delete()
+    msg = "Removed Round - " + str(round) + " !"
+    messages.success(request, msg)
+    if request.GET.get('next') is not None:
+        return redirect(request.GET.get('next'))
+    return redirect('view_company_info', company_id)
+
+
+def view_company_info(request, company_id):
+    company_info = CompanyInfo.objects.get(pk=company_id)
+    error = None
+    if request.method == 'POST':
+        if 'edit_recruiter' in request.POST:
+            recruiter_id = request.POST['id']
+            entry = get_object_or_404(HRContactInfo, pk=recruiter_id)
+            hr_form = HRContactInfoForm(request.POST, instance=entry)
+            try:
+                if hr_form.is_valid():
+                    hr = hr_form.save()
+                    msg = "Recruiter " + str(hr.full_name()) + " information saved !"
+                    messages.success(request, msg)
+                else:
+                    error = ["Please Enter correct Details!!"]
+                    if hr_form.errors is not None:
+                        error = []
+                        for err in hr_form.errors:
+                            for er in hr_form.errors.get(err):
+                                error.append(er)
+            except forms.ValidationError as e:
+                error = [str(e)]
+        elif 'edit_round_info' in request.POST:
+            round_id = request.POST['id']
+            entry = get_object_or_404(RoundInfo, pk=round_id)
+            round_form = RoundInfoForm(request.POST, instance=entry)
+            try:
+                if round_form.is_valid():
+                    round_info = round_form.save()
+                    msg = "Round " + str(round_info) + " information saved !"
+                    messages.success(request, msg)
+                else:
+                    error = ["Please Enter correct Details!!"]
+                    if round_form.errors is not None:
+                        error = []
+                        for err in round_form.errors:
+                            for er in round_form.errors.get(err):
+                                error.append(er)
+            except forms.ValidationError as e:
+                error = [str(e)]
+        elif 'add_round_info' in request.POST:
+            round_form = RoundInfoForm(request.POST)
+            try:
+                if round_form.is_valid():
+                    round_info = round_form.save(commit=False)
+                    round_info.company = company_info
+                    round_info.save()
+                    msg = "Round " + str(round_info) + " create for company " + str(round_info.company) + "!"
+                    messages.success(request, msg)
+                else:
+                    error = ["Please Enter correct Details!!"]
+                    if round_form.errors is not None:
+                        error = []
+                        for err in round_form.errors:
+                            for er in round_form.errors.get(err):
+                                error.append(er)
+            except forms.ValidationError as e:
+                error = [str(e)]
+        else:
+            hr_form = HRContactInfoForm(request.POST)
+            try:
+                if hr_form.is_valid():
+                    hr = hr_form.save(commit=False)
+                    hr.company = company_info
+                    hr.save()
+                    msg = "Recruiter " + str(hr.full_name()) + " added !"
+                    messages.success(request, msg)
+                else:
+                    error = ["Please Enter correct Details!!"]
+                    if hr_form.errors:
+                        error = []
+                        for err in hr_form.errors:
+                            for er in hr_form.errors.get(err):
+                                error.append(er)
+            except forms.ValidationError as e:
+                error = [str(e)]
+    hr_form = HRContactInfoForm()
+    return render(request, 'view_company_info.html',
+                  {'company_info': company_info, 'form': hr_form, 'error_msg': error})

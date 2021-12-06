@@ -491,7 +491,7 @@ for i_account in recruit_users_set:
         HRContactInfo.objects.create(
             company=c_info,
             email=user_obj.email,
-            phoneNumber=user_obj.profile.phone_number,
+            phone_number=user_obj.profile.phone_number,
             designation='HR',
             personal_title=1 if user_obj.profile.gender == 'M' else 2,
             first_name=user_obj.profile.first_name,

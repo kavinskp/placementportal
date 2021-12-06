@@ -1,0 +1,60 @@
+{% block styles %}
+    <style type="text/css">
+        .radioChoice, .radioChoice > li {
+            list-style: none;
+            display: inline-block;
+            margin: 0;
+            padding: 5px;
+        }
+    </style>
+{% endblock %}
+<div>
+    <form method="post" {% if action_url %}action="{{ action_url }}" {% endif %} enctype="multipart/form-data">
+        <div class="row">
+            {% csrf_token %}
+            {% if id %}
+                <input type="hidden" name="id" value="{{ id }}"/>
+            {% endif %}
+            {% if otherLinks %}
+                {% for link in otherLinks %}
+                    <div>
+                        <a href="{{ link.url }}">{{ link.url_display }}</a>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            {% for field in form %}
+                <div class="form-group">
+                    <div class="row m-2">
+                        <div class="col-sm-4 text-sm-end">{{ field.label }}
+                            {% if field.field.required %}
+                                <span class="required" style="color: red">*</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-sm-5">
+                            {{ field }}
+                            <br/>
+                            {% for error in field.errors %}
+                                <small style="color: red">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="row">
+            <div class="col-sm-4"></div>
+            <div class="col-sm-4">
+                <button type="submit" class="btn btn-success" {% if submit_name %}name="{{ submit_name }}"{% endif %}>
+                    Submit
+                </button>
+            </div>
+            {% if delete_btn %}
+                <div class="col-sm-4">
+                    <button type="submit" class="btn btn-danger" name="{{ delete_name }}">
+                        {{ delete_btn }}
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </form>
+</div>

@@ -1,6 +1,4 @@
 from django.db import models
-from django.dispatch import receiver
-from django.db.models.signals import post_save
 
 from Curriculum.models import Batch
 
@@ -53,8 +51,8 @@ class HRContactInfo(models.Model):
     last_name = models.CharField(max_length=20)
     designation = models.CharField(max_length=20)
     preferred_contact = models.SmallIntegerField(choices=PREF_CONTACT_TYPE)
-    phoneNumber = models.CharField(blank=True, null=True, max_length=15)
-    email = models.EmailField()
+    phone_number = models.CharField(blank=True, null=True, max_length=15)
+    email = models.EmailField(blank=True, null=True)
 
     def __str__(self):
         return self.full_name()
@@ -64,7 +62,7 @@ class HRContactInfo(models.Model):
         if self.middle_name is not None:
             name += ' ' + self.middle_name
         name += ' ' + self.last_name
-        return name
+        return self.get_personal_title_display() + " " + name
 
 
 def get_string(min_val, max_val):
@@ -191,21 +189,15 @@ class RoundInfo(models.Model):
     TYPES = (
         (0, 'Undecided'),
         (1, 'Assessment Test'),
-        (2, 'Group Round'),
-        (3, 'Panel Round'),
-        (4, 'Individual Interview'),
-        (5, 'Final Discussion'),
-        (6, 'HR Discussion'),
-        (7, 'CV Review'),
-        (8, 'Other Types'),
-    )
-    STATUS = (
-        (0, 'NotStarted'),
-        (1, 'Active'),
-        (2, 'Finished'),
-        (3, 'Cancelled'),
-        (4, 'Postponed'),
-        (5, 'ToBeContinued'),
+        (2, 'Competitive Coding Round'),
+        (3, 'Advanced Coding Round'),
+        (4, 'Group Round'),
+        (5, 'Panel Round'),
+        (6, 'Individual Interview'),
+        (7, 'Final Discussion'),
+        (8, 'HR Discussion'),
+        (9, 'CV Review'),
+        (10, 'Other Types'),
     )
     QUESTION_TYPES = (
         (1, 'Technical'),
@@ -213,47 +205,43 @@ class RoundInfo(models.Model):
         (3, 'Mixed'),
     )
     TEST_MODES = (
-        (1, 'Online'),
-        (2, 'Offline'),
-        (3, 'Written')
-    )
-    CONVERSATION_MODE = (
         (1, 'Personal'),
         (2, 'Telephonic'),
         (3, 'Video Call'),
         (4, 'Online'),
-        (5, 'Others')
+        (5, 'Offline (System)'),
+        (6, 'Written'),
+        (7, 'Group'),
+        (8, 'Others')
     )
-    job = models.ForeignKey(CompanyJob, on_delete=models.CASCADE)
+    company = models.ForeignKey(CompanyInfo, on_delete=models.CASCADE)
     question_type = models.SmallIntegerField(choices=QUESTION_TYPES)
     type = models.SmallIntegerField(choices=TYPES)
     mode = models.SmallIntegerField(choices=TEST_MODES)
-    round_number = models.IntegerField(default=0)
-    status = models.SmallIntegerField(choices=STATUS, default=0),
-    conversation_mode = models.SmallIntegerField(choices=CONVERSATION_MODE),
-    other_medium = models.CharField(max_length=100, null=True),
-    sample_questions = models.FileField(null=True, upload_to='comapany/round/')
-    description = models.TextField()
+    medium = models.CharField(max_length=100, null=True, blank=True, verbose_name='Application / Website Name')
+    sample_questions = models.FileField(null=True, blank=True, upload_to='company/round/')
+    description = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return self.get_type_display() + ' ( ' + self.get_mode_display() + ' )'
+
+class PreferenceSchedulePeriod(models.Model):
+    company = models.ForeignKey(CompanyInfo, on_delete=models.CASCADE)
+    schedule_date = models.DateField()
+    start_time = models.TimeField()
+    end_time = models.TimeField()
 
     class Meta:
-        unique_together = ('job', 'round_number')
+        unique_together = ['company', 'schedule_date']
 
+    def get_date(self):
+        return self.schedule_date.strftime('%d/%m/%Y')
 
-@receiver(post_save, sender=RoundInfo)
-def approve_status_post_save(sender, instance, created, *args, **kwargs):
-    round_number = instance.round_number
-    if round_number == 0:
-        job_rounds = RoundInfo.objects.filter(job=instance.job)
-        if job_rounds.exists():
-            last_round = job_rounds.last()
-        else:
-            last_round = 0
-        instance.round_number = last_round + 1
-        instance.save()
+    def get_start_time(self):
+        return self.start_time.strftime('%I:%M %p')
 
+    def get_end_time(self):
+        return self.end_time.strftime('%I:%M %p')
 
-class CompanySchedulePreference(models.Model):
-    company = models.ForeignKey(CompanyInfo, on_delete=models.CASCADE)
-    range_start = models.DateField()
-    range_end = models.DateField()
-    slot_count = models.PositiveSmallIntegerField(default=1)
+    def __str__(self):
+        return str(self.get_date()) + " - " + str(self.get_start_time()) + " - " + str(self.get_end_time())

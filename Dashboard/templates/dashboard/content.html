@@ -9,15 +9,13 @@
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
-                            {% if active_tab == "manage_companies" %}
+                            {% if active_tab == "view_company_info" or active_tab == "view_company_schedule" %}
+                                <li class="breadcrumb-item"><a href="{% url 'manage_companies' %}">Companies</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">{{ company_info.name }}</li>
+                            {%  elif active_tab == "view_students" %}
                                 <li class="breadcrumb-item"><a href="{% url 'manage_companies' %}">Companies</a></li>
                                 <li class="breadcrumb-item active" aria-current="page">{{ company.name }}</li>
                             {% endif %}
-                            {% if active_tab == "view_students" %}
-                                <li class="breadcrumb-item"><a href="{% url 'manage_companies' %}">Companies</a></li>
-                                <li class="breadcrumb-item active" aria-current="page">{{ company.name }}</li>
-                            {% endif %}
-
                         </ol>
                     </nav>
                 </div>
@@ -33,7 +31,7 @@
                  id="NotificationModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
                 <div class="modal-dialog" role="alert">
                     <div class="modal-content bg-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} text-white">
-                        <div class="modal-body">
+                        <div class="modal-body" id="notification">
                             {{ message }}
                         </div>
                     </div>
@@ -41,8 +39,6 @@
             </div>
         {% endfor %}
     {% endif %}
-
-
 
     {% if error_msg %}
         <div class="modal modal-success" id="ErrorModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
@@ -77,6 +73,18 @@
         </div>
     </div>
 
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header" id="toastHeader">
+                <strong class="me-auto" id="toastTitle">Bootstrap</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toastBody">
+                Hello, world! This is a toast message.
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
 
 {% block dashboardscripts %}
@@ -89,5 +97,37 @@
                 $('#NotificationModal').modal('show');
             {% endif %}
         });
+
+        function showSuccessNotification(title, content) {
+            $('#toastTitle').html(title);
+            $('#liveToast').attr('class', 'toast bg-success bg-gradient text-white');
+            $('#toastHeader').attr('class', 'toast-header bg-success text-white');
+            $('#toastBody').html(content);
+            var toast = new bootstrap.Toast(document.getElementById('liveToast'));
+            toast.show();
+        }
+
+        function showErrorNotification(title, content) {
+            $('#toastTitle').html(title);
+            $('#liveToast').attr('class', 'toast bg-danger bg-gradient text-white');
+            $('#toastHeader').attr('class', 'toast-header bg-danger text-white');
+            $('#toastBody').html(content);
+            var toast = new bootstrap.Toast(document.getElementById('liveToast'));
+            toast.show();
+        }
+
+        function confirmModal(confirmText) {
+            $('#confirm_modal_txt').html(confirmText);
+            $('#confirmBootstrapModal').show();
+
+            $("#confirm_modal_btn_yes").on("click", function () {
+                $("#confirmBootstrapModal").hide();
+                return true;
+            });
+            $("#confirm_modal_btn_no").on("click", function () {
+                $("#confirmBootstrapModal").hide;
+                return false;
+            });
+        }
     </script>
 {% endblock %}

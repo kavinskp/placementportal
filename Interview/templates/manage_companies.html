@@ -12,6 +12,12 @@
                     <div class="card">
                         <div class="card-header fw-bold fs-4">
                             {{ company.name }}
+                            {% if company.companyinterview.marked_for_enroll %}
+                                <i style="color: blue" class="bi bi-patch-check-fill"></i>
+                            {% endif %}
+                            {% if company.companyinterview.schedule.all %}
+                                <i style="color: green" class="bi bi-calendar-check-fill"></i>
+                            {% endif %}
                         </div>
                         <div class="card-body">
                             <div class="row mb-3">
@@ -55,26 +61,26 @@
                             </div>
                             <div class="row mb-3">
                                 <div class="col-sm-3">
-                                    <a href="{% url 'view_company_details' company.id %}">
+                                    <a href="{% url 'view_company_info' company.id %}">
                                         <button type="button" class="btn btn-secondary">
                                             <span class="me-2"><i class="bi bi-eye-fill"></i></span>
                                             <span>View</span>
                                         </button>
                                     </a>
                                 </div>
-                                <div class="col-sm-4">
+                                <div class="col-sm-3">
                                     <a href="{% url 'view_student_list' company.id %}">
                                         <button type="button" class="btn btn-danger"><span class="me-2"><i
                                                 class="bi bi-people-fill"></i></span>
-                                            <span>Students List</span>
+                                            <span>Students</span>
                                         </button>
                                     </a>
                                 </div>
-                                <div class="col-sm-5">
-                                    <a href="{% url 'filter_students_for_company' company.id %}">
+                                <div class="col-sm-3">
+                                    <a href="{% url 'view_company_schedule' company.id %}">
                                         <button type="button" class="btn btn-success">
-                                            <span class="me-2"><i class="bi bi-check2-all"></i></span>
-                                            <span>Ask for Enroll</span>
+                                            <span class="me-2"><i class="bi bi-calendar2"></i></span>
+                                            <span>Schedule</span>
                                         </button>
                                     </a>
                                 </div>

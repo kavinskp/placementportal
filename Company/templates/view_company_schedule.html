@@ -1,0 +1,577 @@
+{% extends 'dashboard/content.html' %}
+{% block content %}
+    {% if request.user.get_user_type_display == 'Interviewer' %}
+        {% with active_menu="recruiter" active_tab="view_company_schedule" %}
+            {{ block.super }}
+        {% endwith %}
+    {% else %}
+        {% with active_menu="interview" active_page="manage_companies" active_tab="view_company_schedule" %}
+            {{ block.super }}
+        {% endwith %}
+    {% endif %}
+{% endblock %}
+{% block rightPanel %}
+    <div class="container-fluid p-2">
+        <div class="row  mb-3">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header fw-bold fs-4">
+                        <span class="me-2"><i class="bi bi-building"></i> </span><span> {{ company_info.name }}'s Interview Schedule</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="table-container">
+                                <table class="table table-striped table-responsive caption-top">
+                                    <caption class="fw-bold">
+                                        <span class="me-4"> Preferred Ranges by recuriters </span>
+                                        {% if perms.Company.can_update_company_details %}
+                                            <span style="float: right">
+                                                <a class="btn btn-success" data-bs-toggle="modal"
+                                                   data-bs-target="#add_preference_period_range_modal">
+                                               <span>Add Preferred Date</span>
+                                            </a>
+                                                </span>
+                                        {% endif %}
+                                    </caption>
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Date</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        {% if perms.Company.can_update_company_details %}
+                                            <th></th>
+                                            <th></th>
+                                        {% endif %}
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for range in company_info.preferencescheduleperiod_set.all %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td>{{ range.get_date }}</td>
+                                            <td>{{ range.get_start_time }}</td>
+                                            <td>{{ range.get_end_time }}</td>
+                                            {% if perms.Company.can_update_company_details %}
+                                                <td>
+                                                    <a class="btn btn-outline-danger edit_preference_range_btn"
+                                                       data-url="{% url 'ajax_load_preference_schedule_period_form' %}"
+                                                       data-id="{{ range.id }}">
+                                                        <span><i class="bi bi-pencil"></i></span></a>
+                                                </td>
+                                                <td>
+                                                    <a class="btn btn-danger"
+                                                       href="{% url 'delete_preference_schedule_period' range.id %}?next={{ request.path }}"><i
+                                                            class="bi bi-trash"></i></a>
+                                                </td>
+                                            {% endif %}
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="table-container">
+                                <table class="table table-striped table-responsive caption-top">
+                                    <caption class="fw-bold">
+                                        <span class="me-4">Finalised Interview Dates</span>
+                                    </caption>
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>Start</th>
+                                        <th>End</th>
+                                        <th>Recruiters</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for company_slot in company_info.companyevent_set.all %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td><b>{{ company_slot.event.name }}</b></td>
+                                            <td>{{ company_slot.event.get_start_time }}</td>
+                                            <td>{{ company_slot.event.get_end_time }}</td>
+                                            <td>
+                                                {% for coordinator in company_slot.co_ordinator.all %}
+                                                    <a class="btn badge rounded-pill bg-black"
+                                                       href="{% url 'view_company_info' company_info.id %}"> {{ coordinator }}</a>
+                                                {% endfor %}
+                                            </td>
+                                            {% if perms.Company.can_update_company_details %}
+                                                {% if company_slot.is_approved == 0 %}
+                                                    <td>
+                                                        <a class="btn btn-success"
+                                                           href="{% url 'approve_suggested_slot' company_slot.id %}">
+                                                            <span><i class="bi bi-hand-thumbs-up-fill"></i></span></a>
+                                                        <a class="btn btn-danger"
+                                                           href="{% url 'reject_suggested_slot' company_slot.id %}"><i
+                                                                class="bi bi-hand-thumbs-down-fill"></i></a>
+                                                    </td>
+                                                {% else %}
+                                                    {% if company_slot.is_scheduled %}
+                                                        <td>Scheduled</td>
+                                                        <td>
+                                                            <a class="btn btn-outline-danger edit_finalised_schedule_btn"
+                                                               data-url="{% url 'ajax_load_interviewer_for_slot_form' %}"
+                                                               data-id="{{ company_slot.id }}">
+                                                                <span><i class="bi bi-pencil"></i></span></a>
+                                                        </td>
+                                                        <td>
+                                                            <a class="btn btn-danger"
+                                                               href="{% url 'reject_suggested_slot' company_slot.id %}"><i
+                                                                    class="bi bi-trash"></i></a>
+                                                        </td>
+                                                    {% else %}
+                                                        <td>Rejected</td>
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endif %}
+                                            {% if perms.Interview.can_schedule_interview %}
+                                                {% if company_slot.is_approved == 0 %}
+                                                    <td>Not confirmed</td>
+                                                {% elif company_slot.is_scheduled %}
+                                                    <td>Scheduled</td>
+                                                {% else %}
+                                                    <td>Rejected</td>
+                                                {% endif %}
+                                                <td>
+                                                    <a class="btn btn-danger"
+                                                       href="{% url 'delete_company_slot' company_slot.id %}"><i
+                                                            class="bi bi-trash"></i></a>
+                                                </td>
+                                            {% endif %}
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% if perms.Interview.can_schedule_interview %}
+            <div class="row  mb-3">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header fw-bold fs-4">
+                            <span class="me-2"><i
+                                    class="bi bi-calendar2-week"></i> </span><span> Schedule Interview</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <br/>
+                                <form class="my-3" id="choose_slot_form" method="get"
+                                      action="{% url 'view_company_schedule' company_info.id %}">
+                                    {% csrf_token %}
+                                    <div class="row col-12">
+                                        <div class="col-3">
+                                            <label class="form-label" for="slotDate">Choose Date</label>
+                                        </div>
+                                        <div class="col-4">
+                                            <input class="form-control col-6" type="date" id="slotDate"
+                                                   name="slotDate" value="{{ slotDate }}"/>
+                                        </div>
+                                    </div>
+                                    <div class="table-container" id="events_table">
+                                        <table class="table table-striped table-responsive caption-top">
+                                            <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Event</th>
+                                                <th>Start Time</th>
+                                                <th>End Time</th>
+                                                <th>Duration</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id="event_table_content">
+                                            {% for event in eventsInDate %}
+                                                <tr {% if event.is_interview %}style="background-color: #ffd49b"{% endif %}>
+                                                    <td>{{ forloop.counter }}</td>
+                                                    <td>{{ event.name }}</td>
+                                                    <td>{{ event.get_start_time }}</td>
+                                                    <td>{{ event.get_end_time }}</td>
+                                                    <td>{{ event.end|timeuntil:event.start }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="row my-3">
+                                        <div class="col-3"></div>
+                                        <div class="col-9">
+
+                                            <a class="btn btn-success" {% if slotDate %} data-bs-toggle="modal"
+                                               data-bs-target="#scheduleInterviewModal" {% endif %}>Schedule
+                                                Interview</a>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+
+    <div class="modal fade" id="choose_slot_modal" tabindex="-1"
+         aria-labelledby="chooseSlotModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="chooseSlotModalLabel">Choose Slot</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row col-sm-12" id="choose_slot_modal_div">
+                    </div>
+                    <div class="row col-sm-12" id="slot_information">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="update_preference_period_range_modal" tabindex="-1"
+         aria-labelledby="updatePreferenceLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updatePreferenceLabel">Update Preference</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row col-sm-12" id="update_preference_period_range_div">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="add_preference_period_range_modal" tabindex="-1"
+         aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Add Preference Slot</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row col-sm-12">
+                        <form method="post" id="preference_period_range_form">
+                            <div>
+                                {% csrf_token %}
+                                {% for field in form %}
+                                    <div class="form-group">
+                                        <div class="row m-2">
+                                            <div class="col-sm-4 text-sm-end">{{ field.label }}
+                                                {% if field.field.required %}
+                                                    <span class="required" style="color: red">*</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-sm-5">
+                                                {{ field }}
+                                                <br/>
+                                                {% for error in field.errors %}
+                                                    <small style="color: red">{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                                <div class="row">
+                                    <div class="col-sm-4"></div>
+                                    <div class="col-sm-4">
+                                        <button type="submit" class="btn btn-success">
+                                            Add
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="scheduleInterviewModal" tabindex="-1"
+         aria-labelledby="scheduleInterviewModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="scheduleInterviewModalLabel">Schedule Interview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row col-sm-12">
+                        <form class="my-3" id="scheduleInterview" method="post"
+                              action="{% url 'view_company_schedule' company_info.id %}">
+                            <div>
+                                {% csrf_token %}
+                                <div class="form-group">
+
+                                    <div class="mb-3 row">
+                                        <label for="eventName" class="col-sm-2 col-form-label">Name</label>
+                                        <div class="col-sm-10">
+                                            <input type="text" class="form-control" id="eventName" name="eventName"
+                                                   required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 row">
+                                        <label for="slotDate" class="col-sm-2 col-form-label">Date</label>
+                                        <div class="col-sm-10">
+                                            <input type="text" readonly class="form-control" id="slotDate"
+                                                   name="slotDate" value="{{ slotDate }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="isAllDay"
+                                               id="id_allday">
+                                        <label class="form-check-label" for="id_allday">
+                                            AllDay
+                                        </label>
+                                    </div>
+
+                                    <div class="mb-3 row" id="timeInputDiv">
+                                        <label for="startTime" class="col-sm-2 col-form-label">Start Time</label>
+                                        <div class="col-sm-3">
+                                            <input type="time" class="form-control" id="startTime" name="startTime"
+                                                   value="10:00" required>
+                                        </div>
+                                        <label for="endTime" class="col-sm-2 col-form-label">End Time</label>
+                                        <div class="col-sm-3">
+                                            <input type="time" class="form-control" id="endTime" name="endTime"
+                                                   value="17:00" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4"></div>
+                                    <div class="col-sm-4">
+                                        <button type="submit" class="btn btn-success" name="schedule_interview">
+                                            Add
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="edit_interviewer_for_slot_modal" tabindex="-1"
+         aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Choose Recruiter for slot</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center">
+                        <span><i class="bi bi-info-circle-fill"></i></span>
+                        <span class="small text-muted"> To select/unselect in muliple choice field use CTRL + mouse click</span>
+                    </div>
+                    <div class="row col-sm-12 m-2 form-group" id="edit_interviewer_for_slot_div">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+
+        function printHours(hours) {
+            if (hours > 1) {
+                return hours + " Hours";
+            }
+            return hours + " Hour";
+        }
+
+        function printMinutes(minutes) {
+            if (minutes > 1) {
+                return minutes + " Minutes";
+            }
+            return hours + " Minute";
+        }
+
+        function printDuration(eventData) {
+            if (eventData.isAllDay) {
+                return "Full Day";
+            }
+            var timeStart = new Date(eventData.start);
+            var timeEnd = new Date(eventData.end);
+            var hourDiff = timeEnd - timeStart; //in ms
+            var minDiff = hourDiff / 60 / 1000; //in minutes
+            var hDiff = hourDiff / 3600 / 1000; //in hours
+            var hours = Math.floor(hDiff);
+            var minutes = minDiff - 60 * hours;
+            if (minutes > 0) {
+                return printHours(hours) + " " + printMinutes(minutes);
+            }
+            return printHours(hours);
+        }
+
+        function printDate(start, isAllDay) {
+            var date = new Date(start);
+            var dateString = date.toLocaleDateString();
+            if (isAllDay) {
+                return dateString;
+            }
+            var timeString = date.toLocaleTimeString('en-US', {
+                timeZone: 'UTC',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+            return dateString + " " + timeString;
+        }
+
+        $('#slotDate').change(function () {
+            $('#choose_slot_form').submit();
+        });
+
+        $('#id_allday').change(function () {
+            var allday = $(this).prop('checked');
+            if (allday) {
+                $('#timeInputDiv').hide();
+            } else {
+                $('#timeInputDiv').show();
+            }
+        });
+
+        $(document).on('load', function () {
+            $('#timeInputDiv').show();
+        });
+
+        /* $(window).on('load', function () {
+             $('#events_table').hide();
+         });
+
+         $('#slotDate').change(function () {
+             $('#events_table').hide();
+             $.ajax({
+                 type: 'GET',
+                 url: {% url 'ajax_choose_slot' %},
+                headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                data: $('#choose_slot_form').serialize(),
+                success: function (response) {
+                    var arr = JSON.parse(response);
+                    var empty = true;
+                    Object.keys(arr).forEach(function (i) {
+                        empty = false;
+                        event_data = arr[i].fields;
+                        console.log(event_data);
+                        var html = "<tr>"
+                            + "<td>" + i + 1 + "</td>"
+                            + "<td>" + event_data.name + "</td>"
+                            + "<td>" + printDate(event_data.start, event_data.allday) + "</td>"
+                            + "<td>" + printDate(event_data.end, event_data.allday) + "</td>"
+                            + "<td>" + printDuration(event_data) + "</td>"
+                            + "</tr>";
+                        $('#event_table_content').html(html);
+                        $('#events_table').show();
+                    });
+
+                    if (empty) {
+                        $('#event_table_content').html("");
+                        $('#events_table').show();
+                    }
+                },
+                error: function (response) {
+                    var data = JSON.parse(response.responseText);
+                    Object.keys(data).forEach(function (key) {
+                        $('#id_' + key).parent().append('<small style="color: red">' + data[key] + '</small><br/>');
+                    });
+                }
+            });
+        });
+        */
+        $('.edit_finalised_schedule_btn').click(function () {
+            var url = $(this).attr('data-url');
+            var id = $(this).attr('data-id');
+            $.ajax({
+                url: url,
+                data: {
+                    'slot_id': id,
+                },
+                success: function (data) {
+                    $('#edit_interviewer_for_slot_div').html(data);
+                    $('#edit_interviewer_for_slot_modal').modal('show');
+                }
+            });
+        });
+
+        $('.edit_preference_range_btn').click(function () {
+            var url = $(this).attr('data-url');
+            var id = $(this).attr('data-id');
+            $.ajax({
+                url: url,
+                data: {
+                    'schedule_preference_id': id
+                },
+                success: function (data) {
+                    $('#update_preference_period_range_div').html(data);
+                    $('#update_preference_period_range_modal').modal('show');
+                }
+            });
+        });
+
+        $('#preference_period_range_form').submit(function (e) {
+            e.preventDefault();
+            var $form = $(this);
+            var company_id = {{ company_info.id }};
+            var url = '/ajax_add_schedule_preference_period/' + company_id + '/';
+            let csrftoken = '{{ csrf_token }}'
+            $.ajax({
+                type: 'POST',
+                url: url,
+                headers: {'X-CSRFToken': csrftoken},
+                data: $form.serialize(),
+                success: function (response) {
+                    console.log(response);
+                    location.reload();
+                },
+                error: function (response) {
+                    var data = JSON.parse(response.responseText);
+                    Object.keys(data).forEach(function (key) {
+                        $('#id_' + key).parent().append('<small style="color: red">' + data[key] + '</small><br/>');
+                    });
+                }
+            });
+        });
+
+    </script>
+{% endblock %}

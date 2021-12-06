@@ -22,9 +22,9 @@
 }
 
 .zoom:hover {
-  -ms-transform: scale(3); /* IE 9 */
-  -webkit-transform: scale(3); /* Safari 3-8 */
-  transform: scale(3);
+    -ms-transform: scale(3); /* IE 9 */
+    -webkit-transform: scale(3); /* Safari 3-8 */
+    transform: scale(3);
 }
 
 @media (min-width: 992px) {
@@ -46,5 +46,4 @@
         top: var(--topnavbarHeight);
         height: calc(100% - var(--topnavbarHeight));
     }
-
 }

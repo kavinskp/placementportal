@@ -21,4 +21,9 @@ urlpatterns = [
     url(r'^ajax_load_company_details', ajax_load_company_details, name='ajax_load_company_details'),
     url(r'^ajax_get_allowed_batches_for_job', ajax_get_allowed_batches_for_job,
         name='ajax_get_allowed_batches_for_job'),
+
+    url(r'^ajax_load_round_info_form/', ajax_load_round_info_form, name='ajax_load_round_info_form'),
+    url(r'^delete_round_info/(?P<round_info_id>[0-9]+)', delete_round_info, name='delete_round_info'),
+
+    url(r'^view_company_info/(?P<company_id>[0-9]+)/', view_company_info, name='view_company_info'),
 ]

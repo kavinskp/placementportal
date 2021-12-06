@@ -81,26 +81,26 @@
                              id="recruiter_collapse">
                             <ul class="navbar-nav ps-3">
                                 <li>
-                                    <a href="{% url 'view_company_info' %}"
+                                    <a href="{% url 'view_company_info' request.session.company_id %}"
                                        class="nav-link px-3 {% if active_tab == "view_company_info" %}active{% endif %}">
                                         <span class="me-2"><i class="bi bi-info-circle"></i></span>
-                                        <span>View company details</span>
+                                        <span>Company Details</span>
                                     </a>
                                 </li>
-{#                                <li>#}
-{#                                    <a href="{% url 'approve_students' %}"#}
-{#                                       class="nav-link px-3 {% if active_tab == "approve_student" %}active{% endif %}">#}
-{#                                        <span class="me-2"><i class="bi bi-people-fill"></i></span>#}
-{#                                        <span>Approve Students</span>#}
-{#                                    </a>#}
-{#                                </li>#}
-{#                                <li>#}
-{#                                    <a href="{% url 'approve_interviewers' %}"#}
-{#                                       class="nav-link px-3 {% if active_tab == "approve_interviewer" %}active{% endif %}">#}
-{#                                        <span class="me-2"><i class="bi bi-building"></i></span>#}
-{#                                        <span>Approve Interviewers</span>#}
-{#                                    </a>#}
-{#                                </li>#}
+                                <li>
+                                    <a href="{% url 'view_company_schedule' request.session.company_id %}"
+                                       class="nav-link px-3 {% if active_tab == "view_company_schedule" %}active{% endif %}">
+                                        <span class="me-2"><i class="bi bi-calendar3"></i></span>
+                                        <span>View Company Schedule</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'manage_interview_rounds' request.session.company_id %}"
+                                       class="nav-link px-3 {% if active_tab == "manage_interview_rounds" %}active{% endif %}">
+                                        <span class="me-2"><i class="bi bi-headset"></i></span>
+                                        <span>Manage Interview Rounds</span>
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </li>
@@ -191,9 +191,16 @@
                             {% if perms.Interview.can_schedule_interview %}
                                 <li>
                                     <a href="{% url 'manage_companies' %}"
-                                       class="nav-link px-3 {% if active_tab == "manage_companies" %}active{% endif %}">
+                                       class="nav-link px-3 {% if active_page == "manage_companies" or active_tab == "manage_companies" %}active{% endif %}">
                                         <span class="me-2"><i class="bi bi-check2-square"></i></span>
                                         <span>Manage Companies</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'view_calendar' %}"
+                                       class="nav-link px-3 {% if active_tab == "view_calendar" %}active{% endif %}">
+                                        <span class="me-2"><i class="bi bi-calendar3"></i></span>
+                                        <span>View Calendar</span>
                                     </a>
                                 </li>
                             {% endif %}

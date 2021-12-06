@@ -2,7 +2,7 @@ from django.forms import ModelForm
 from django import forms
 from django.forms.widgets import RadioSelect
 
-from Company.models import CompanyInfo, HRContactInfo, Criteria, CompanyJob
+from Company.models import CompanyInfo, HRContactInfo, Criteria, CompanyJob, RoundInfo, PreferenceSchedulePeriod
 from Accounts.views.utils import getInterviewAllowedBatches
 import re
 
@@ -36,14 +36,21 @@ class HRContactInfoForm(ModelForm):
         widget=RadioSelect(
             attrs={'class': 'radioChoice'}, choices=HRContactInfo.PREF_CONTACT_TYPE))
 
-    def clean_phoneNumber(self):
-        phoneno = self.cleaned_data.get('phoneNumber')
+    def clean_phone_number(self):
+        phoneno = self.cleaned_data.get('phone_number')
         if self.cleaned_data.get('preferred_contact') == 2:
             if phoneno is None or phoneno == "":
                 raise forms.ValidationError("Preferred contact cannot be Empty!")
             if not re.match(r'^\+?1?\d{10,15}$', phoneno):
                 raise forms.ValidationError("Phone number should have 10-15 characters")
         return phoneno
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if self.cleaned_data.get('preferred_contact') == 1:
+            if email is None or email == "":
+                raise forms.ValidationError("Preferred contact cannot be Empty!")
+        return email
 
     class Meta:
         model = HRContactInfo
@@ -55,7 +62,7 @@ class HRContactInfoForm(ModelForm):
             'middle_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Middle Name'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'}),
             'designation': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Designation'}),
-            'phoneNumber': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone number'}),
+            'phone_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone number'}),
             'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email Id'}),
             'preferred_contact': forms.RadioSelect(
                 attrs={'class': 'form-radio', 'placeholder': 'Preferred Contact Type'})
@@ -83,5 +90,12 @@ class JobCriteriaForm(ModelForm):
 
     class Meta:
         model = Criteria
+        fields = '__all__'
+        exclude = ['company']
+
+
+class RoundInfoForm(ModelForm):
+    class Meta:
+        model = RoundInfo
         fields = '__all__'
         exclude = ['company']

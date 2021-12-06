@@ -65,7 +65,7 @@ for hr in hr_set:
     phone = None
     last_name = hr[len(hr) - 1]  # if phone number is not given
     try:
-        phone = hr[len(hr) - 1]
+        phone = int(hr[len(hr) - 1])
         last_name = hr[len(hr) - 2]
     except ValueError:
         pass
@@ -73,7 +73,7 @@ for hr in hr_set:
     if len(hr) > 6:
         if len(hr) == 8:  # both number & m_name available
             midd = hr[5]
-        elif phone is None:  # only m_name available so len=6
+        elif phone is None:
             midd = hr[5]
     preffered_contact = 1
     if phone is not None:
@@ -87,7 +87,7 @@ for hr in hr_set:
     HRContactInfo.objects.create(
         company=CompanyInfo.objects.get(name=hr[0]),
         email=hr[1],
-        phoneNumber=phone,
+        phone_number=phone,
         designation=hr[2],
         personal_title=personal_title,
         first_name=hr[4],

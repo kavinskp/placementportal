@@ -1,0 +1,472 @@
+{% extends 'dashboard/content.html' %}
+{% block content %}
+    {% if request.user.get_user_type_display == 'Interviewer' %}
+        {% with active_menu="recruiter" active_tab="view_company_info" %}
+            {{ block.super }}
+        {% endwith %}
+    {% else %}
+        {% with active_menu="interview" active_page="manage_companies" active_tab="view_company_info" %}
+            {{ block.super }}
+        {% endwith %}
+    {% endif %}
+{% endblock %}
+{% block rightPanel %}
+    <div class="container-fluid p-2">
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header fw-bold fs-4">
+                        <span class="me-2"><i class="bi bi-building"></i> </span><span> {{ company_info.name }}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-sm-10">
+                                <table class="table table-striped table-responsive">
+                                    <tr>
+                                        <td><b>Full Name</b></td>
+                                        <td>{{ company_info.full_name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>WebSite</b></td>
+                                        <td><a target="_blank"
+                                               href="{{ company_info.website }}">{{ company_info.website }}</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>Type</b></td>
+                                        <td>{{ company_info.get_type_display }}</td>
+                                    </tr>
+                                    {% if company_info.description %}
+                                        <tr>
+                                            <td><b>Description</b></td>
+                                            <td>{{ company_info.description }}</td>
+                                        </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+                            <div class="col-sm-2">
+                                <img class="img-thumbnail zoom" height="100%" width="100%"
+                                     src="{{ MEDIA_ROOT }}{{ company_info.get_company_logo }}" alt=""/>
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row mb-3">
+                            <div class="table-container">
+                                <table class="table table-striped table-responsive caption-top">
+                                    <caption class="fw-bold">
+                                        <span class="me-4"> Recuriter Information </span>
+                                        {% if perms.Company.can_update_company_details %}
+                                            <span style="float: right">
+                                            <a class="btn btn-success" data-bs-toggle="modal"
+                                               data-bs-target="#add_recruiter_modal">
+                                                <span class="me-2"><i class="bi bi-person-plus-fill"></i></span>
+                                            </a>
+                                        </span>
+                                        {% endif %}
+                                    </caption>
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>Designation</th>
+                                        <th>Preferred Contact</th>
+                                        <th>Email</th>
+                                        <th>Phone Number</th>
+                                        {% if perms.Company.can_update_company_details %}
+                                            <th></th>
+                                            <th></th>
+                                        {% endif %}
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for hr in company_info.hrcontactinfo_set.all %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td><b>{{ hr.full_name }}</b></td>
+                                            <td>{{ hr.designation| default_if_none:"" }}</td>
+                                            <td>{{ hr.get_preferred_contact_display }}</td>
+                                            <td>{{ hr.email | default_if_none:"" }}</td>
+                                            <td>{{ hr.phone_number|default_if_none:"" }}</td>
+                                            {% if perms.Company.can_update_company_details %}
+                                                <td>
+                                                    <a class="btn btn-outline-danger edit_recruiter_btn"
+                                                       data-url="{% url 'ajax_load_edit_recruiter_form' %}"
+                                                       data-id="{{ hr.id }}">
+                                                        <span><i class="bi bi-pencil"></i></span></a>
+                                                </td>
+                                                <td>
+                                                    <a class="btn btn-danger"
+                                                       href="{% url 'delete_recruiter' company_info.pk hr.id %}?next={{ request.path }}"><i
+                                                            class="bi bi-trash"></i></a>
+                                                </td>
+                                            {% endif %}
+                                        </tr>
+
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row mb-3">
+                            <div class="table-container">
+                                <table class="table table-striped table-responsive caption-top">
+                                    <caption class="fw-bold">
+                                        <span class="me-4"> Criteria </span>
+                                        {% if perms.Company.can_update_company_details %}
+                                            <span style="float: right">
+                                            <a class="btn btn-success" href="{% url 'add_role' company_info.pk %}">
+                                                <span class="me-2"><i class="bi bi-plus-circle"></i></span>
+                                                <span>Add Criteria</span>
+                                            </a>
+                                        </span>
+                                        {% endif %}
+                                    </caption>
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Criteria Name</th>
+                                        <th>Batch</th>
+                                        <th>CGPA</th>
+                                        <th>Maximum Existing Backlogs</th>
+                                        <th>Maximum Backlog History</th>
+                                        <th>10th %</th>
+                                        <th>12th %</th>
+                                        {% if perms.Company.can_update_company_details %}
+                                            <th></th>
+                                            <th></th>
+                                        {% endif %}
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for criteria in company_info.criteria_set.all %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td style="font-style: italic;color: #bb2d3b"><b>{{ criteria.name }}</b>
+                                            </td>
+                                            <td>
+                                                <ul style="list-style: none">
+                                                    {% for batch in criteria.get_allowed_batches %}
+                                                        <li>{{ batch }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </td>
+                                            <td>{{ criteria.get_required_cgpa|default_if_none:"" }}</td>
+                                            <td>{{ criteria.history | default_if_none:"" }}</td>
+                                            <td>{{ criteria.current | default_if_none:"" }}</td>
+                                            <td>{{ criteria.get_required_10th_percentage|default_if_none:"" }}</td>
+                                            <td>{{ criteria.get_required_12th_percentage|default_if_none:"" }}</td>
+                                            {% if perms.Company.can_update_company_details %}
+                                                <td>
+                                                    <a class="btn btn-outline-secondary" target="_blank"
+                                                       href="{% url 'edit_criteria' company_info.pk criteria.pk %}"><i
+                                                            class="bi bi-pencil"></i></a>
+                                                </td>
+                                                <td>
+                                                    <a class="btn btn-danger" target="_blank"
+                                                       href="{% url 'delete_criteria' company_info.pk criteria.pk %}"><i
+                                                            class="bi bi-trash"></i></a>
+                                                </td>
+                                            {% endif %}
+                                        </tr>
+
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row mb-3">
+                            <div class="table-container">
+                                <table class="table table-responsive table-striped caption-top">
+                                    <caption class="fw-bold">
+                                        <span class="me-4"> Job Roles Information </span>
+                                        {% if perms.Company.can_update_company_details %}
+                                            <span style="float: right">
+                                            <a class="btn btn-success" target="_blank"
+                                               href="{% url 'add_role' company_info.pk %}">
+                                                <span class="me-2"><i class="bi bi-plus-circle"></i></span>
+                                                <span>Add Role</span>
+                                            </a>
+                                        </span>
+                                        {% endif %}
+                                    </caption>
+                                    <thead>
+                                    <th>#</th>
+                                    <th>Role</th>
+                                    <th>Package</th>
+                                    <th>Vacancy</th>
+                                    <th>Type</th>
+                                    <th>Criteria</th>
+                                    <th>Description</th>
+                                    <th>Bond Info</th>
+                                    <th>Additional Info</th>
+                                    {% if perms.Company.can_update_company_details %}
+                                        <th></th>
+                                        <th></th>
+                                    {% endif %}
+                                    </thead>
+                                    {% for job in company_info.companyjob_set.all %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td>{{ job.role_name }}</td>
+                                            <td>{{ job.package }}</td>
+                                            <td>{{ role.vacancy| default_if_none:"" }}</td>
+                                            <td>{{ job.get_type_display }}</td>
+                                            <td>{{ job.criteria }}</td>
+                                            <td>{{ job.salary_description | default_if_none:"" }}</td>
+                                            <td>{{ job.bond_description | default_if_none:"" }}</td>
+                                            <td>
+                                                {% if job.documents %}
+                                                    {% load static %}
+                                                    <a target="_blank"
+                                                       href="/media/{{ job.documents }}">View</a>
+                                                {% endif %}
+                                            </td>
+                                            {% if perms.Company.can_update_company_details %}
+                                                <td>
+                                                    <a class="btn btn-outline-secondary" target="_blank"
+                                                       href="{% url 'edit_role' company_info.pk job.pk %}"><i
+                                                            class="bi bi-pencil"></i></a>
+                                                </td>
+                                                <td>
+                                                    <a class="btn btn-danger" target="_blank"
+                                                       href="{% url 'delete_role' company_info.pk job.pk %}"><i
+                                                            class="bi bi-trash"></i></a>
+                                                </td>
+                                            {% endif %}
+                                        </tr>
+                                    {% endfor %}
+                                </table>
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row mb-3">
+                            <div class="table-container">
+                                <table class="table table-striped table-responsive caption-top">
+                                    <caption class="fw-bold">
+                                        <span class="me-4"> Company Rounds Information </span>
+                                        {% if perms.Company.can_update_company_details %}
+                                            <span style="float: right">
+                                                    <a class="btn btn-success"
+                                                       id="add_round"
+                                                       data-url="{% url 'ajax_load_round_info_form' %}"
+                                                       data-id="{{ company_info.id }}">
+                                                        <span class="me-2"><i class="bi bi-plus-circle"></i></span>
+                                                        <span>Add Round</span>
+                                                    </a>
+                                                </span>
+                                        {% endif %}
+                                    </caption>
+                                    <thead>
+                                    <tr>
+                                        <th>Round</th>
+                                        <th>Type</th>
+                                        <th>Question Type</th>
+                                        <th>Mode</th>
+                                        <th>Medium</th>
+                                        <th>Sample Questions</th>
+                                        <th>Description</th>
+                                        {% if perms.Company.can_update_company_details %}
+                                            <th></th>
+                                            <th></th>
+                                        {% endif %}
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for round in company_info.roundinfo_set.all %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td><b>{{ round.get_type_display }}</b></td>
+                                            <td>{{ round.get_question_type_display }}</td>
+                                            <td>{{ round.get_mode_display }}</td>
+                                            <td>{{ round.medium | default_if_none:"" }}</td>
+                                            <td>{{ round.sample_questions|default_if_none:"" }}</td>
+                                            <td>{{ round.description|default_if_none:"" }}</td>
+                                            {% if perms.Company.can_update_company_details %}
+                                                <td>
+                                                    <a class="btn btn-outline-danger edit_job_round_btn"
+                                                       data-url="{% url 'ajax_load_round_info_form' %}"
+                                                       data-id="{{ round.id }}">
+                                                        <span><i class="bi bi-pencil"></i></span></a>
+                                                </td>
+                                                <td>
+                                                    <a class="btn btn-danger"
+                                                       href="{% url 'delete_round_info' round.id %}?next={{ request.path }}"><i
+                                                            class="bi bi-trash"></i></a>
+                                                </td>
+                                            {% endif %}
+                                        </tr>
+
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="add_job_round_modal" tabindex="-1"
+         aria-labelledby="addRoundModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addRoundModalLabel">Add Recruiter</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row col-sm-12" id="add_round_info_form_div">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="add_recruiter_modal" tabindex="-1"
+         aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Add Recruiter</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row col-sm-12">
+                        <form method="post" id="add_recruiter_form">
+                            <div>
+                                {% csrf_token %}
+                                {% for field in form %}
+                                    <div class="form-group">
+                                        <div class="row m-2">
+                                            <div class="col-sm-4 text-sm-end">{{ field.label }}
+                                                {% if field.field.required %}
+                                                    <span class="required" style="color: red">*</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-sm-5">
+                                                {{ field }}
+                                                <br/>
+                                                {% for error in field.errors %}
+                                                    <small style="color: red">{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                                <div class="row">
+                                    <div class="col-sm-4"></div>
+                                    <div class="col-sm-4">
+                                        <button type="submit" name="add_hr" class="btn btn-success">
+                                            Submit
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="edit_recruiter_modal" tabindex="-1"
+         aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Edit Recruiter</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row col-sm-12 m-2 form-group" id="edit_recuiter_form_div">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block scripts %}
+    <script>
+        $('#add_round').click(function () {
+            var url = $(this).attr('data-url');
+            var company_id = $(this).attr('data-id');
+            $.ajax({
+                url: url,
+                data: {
+                    'company_id': company_id
+                },
+                success: function (data) {
+                    $('#add_round_info_form_div').html(data);
+                    $('#add_job_round_modal').modal('show');
+                }
+            });
+        });
+        $('.edit_job_round_btn').click(function () {
+            var url = $(this).attr('data-url');
+            var round_info_id = $(this).attr('data-id');
+            $.ajax({
+                url: url,
+                data: {
+                    'round_info_id': round_info_id
+                },
+                success: function (data) {
+                    $('#add_round_info_form_div').html(data);
+                    $('#add_job_round_modal').modal('show');
+                }
+            });
+        });
+        $('.edit_recruiter_btn').click(function () {
+            var url = $(this).attr('data-url');
+            var recruiter_id = $(this).attr('data-id');
+            $.ajax({
+                url: url,
+                data: {
+                    'recruiter_id': recruiter_id
+                },
+                success: function (data) {
+                    $('#edit_recuiter_form_div').html(data);
+                    $('#edit_recruiter_modal').modal('show');
+                }
+            });
+        });
+
+        $('#add_recruiter_form').submit(function (e) {
+            e.preventDefault();
+            var $form = $(this);
+            var company_id = {{ company_info.id }};
+            var url = '/ajax_add_recruiter/' + company_id + '/';
+            let csrftoken = '{{ csrf_token }}'
+            $.ajax({
+                type: 'POST',
+                url: url,
+                headers: {'X-CSRFToken': csrftoken},
+                data: $form.serialize(),
+                success: function (response) {
+                    location.reload();
+                },
+                error: function (response) {
+                    var data = JSON.parse(response.responseText);
+                    Object.keys(data).forEach(function (key) {
+                        $('#id_' + key).parent().append('<small style="color: red">' + data[key] + '</small><br/>');
+                    });
+                }
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,248 @@
+{% extends 'dashboard/content.html' %}
+{% block content %}
+    {% with active_menu="interview" active_tab="view_calendar" %}
+        {{ block.super }}
+    {% endwith %}
+{% endblock %}
+{% block rightPanel %}
+    <div class="container-fluid m-2" id="calendar">
+    </div>
+
+
+    <div class="modal fade" id="add_event_modal" tabindex="-1"
+         aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Add Event</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row col-sm-12">
+                        <form method="post" id="add_event_form" action="{% url 'change_event' %}">
+                            <div>
+                                {% csrf_token %}
+                                {% for field in form %}
+                                    <div class="form-group">
+                                        <div class="row m-2">
+                                            <div class="col-sm-4 text-sm-end">{{ field.label }}
+                                                {% if field.field.required %}
+                                                    <span class="required" style="color: red">*</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-sm-5">
+                                                {{ field }}
+                                                <br/>
+                                                {% for error in field.errors %}
+                                                    <small style="color: red">{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                                <div class="row">
+                                    <div class="col-sm-4"></div>
+                                    <div class="col-sm-4">
+                                        <button type="submit" class="btn btn-success" name="add_event">
+                                            Add
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="event_info_modal" tabindex="-1"
+         aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Event Information</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row col-sm-12 m-2 form-group" id="event_info_div">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    {#    <script>#}
+    {##}
+    {#        $(document).ready(function () {#}
+    {#            console.log('loading....');#}
+    {#            $('#calendar').fullCalendar({#}
+    {#                editable: true,#}
+    {#                eventLimit: true,#}
+    {#                events: [#}
+    {#                    {% for i in events %}#}
+    {#                        {#}
+    {#                            title: "{{ i.name}}",#}
+    {#                            start: '{{ i.start|date:"Y-m-d" }}',#}
+    {#                            end: '{{ i.end|date:"Y-m-d" }}',#}
+    {##}
+    {#                        },#}
+    {#                    {% endfor %}#}
+    {#                ]#}
+    {#            });#}
+    {##}
+    {#        });#}
+    {#    </script>#}
+    <script>
+
+        var date_format = 'dd/mm/yyyy';
+        var date_format1 = 'yyyy-mm-dd';
+
+        function getDate(dateTime, format) {
+            if (dateTime) {
+                var day = ("0" + dateTime.getDate()).slice(-2);
+                var month = ("0" + (dateTime.getMonth() + 1)).slice(-2);
+                if (format === date_format) {
+                    return day + "/" + month + "/" + dateTime.getFullYear();
+                } else if (format === date_format1) {
+                    return dateTime.getFullYear() + "-" + month + "-" + day;
+                }
+            }
+            return "";
+        }
+
+        function getTime(dateTime) {
+            return getTime(dateTime, true);
+        }
+
+        function getTime(dateTime, withAMPM) {
+            if (dateTime) {
+                return dateTime.toLocaleTimeString('en-US', {
+                    timeZone: 'UTC',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: withAMPM
+                });
+            }
+            return "";
+        }
+
+        function getDateTime(dateTime) {
+            if (dateTime) {
+                return getDate(dateTime, date_format) + " " + getTime(dateTime);
+            }
+            return "";
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prevYear prev,today,next nextYear',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,listWeek'
+                },
+                events: '{% url 'get_events' %}',
+                selectable: true,
+                editable: true,
+                dayMaxEvents: true,
+                timeZone: 'UTC',
+
+                businessHours: {
+                    // days of week. an array of zero-based day of week integers (0=Sunday)
+                    daysOfWeek: [1, 2, 3, 4, 5], // Monday - Thursday
+
+                    startTime: '09:00', // a start time (10am in this example)
+                    endTime: '17:00', // an end time (6pm in this example)
+                },
+
+                eventMouseEnter: function (info) {
+                    var start = getDateTime(info.event.start);
+                    var end = getDateTime(info.event.end);
+                    var title = info.event.title;
+                    var description = '';
+                    if (info.event.extendedProps.description) {
+                        description = info.event.extendedProps.description;
+                    }
+                    var htmlContent = '<b>Start : </b>' + start + '<br/><b>End : </b>' + end + '<br/> <b>' + description + '</b>'
+
+                    $(info.el).popover({
+                        html: true,
+                        title: title,
+                        placement: 'top',
+                        trigger: 'hover',
+                        content: htmlContent,
+                        container: 'body'
+                    }).popover('show');
+                },
+
+                select: function (selectionInfo) {
+                    console.log(selectionInfo);
+                    $("#id_allday").prop('checked', selectionInfo.allDay);
+                    $('#id_start_1').prop('hidden', selectionInfo.allDay);
+                    $('#id_end_1').prop('hidden', selectionInfo.allDay);
+                    $("#id_start_0").val(getDate(selectionInfo.start, date_format1));
+                    $("#id_start_1").val(getTime(selectionInfo.start, false));
+                    $("#id_end_0").val(getDate(selectionInfo.end, date_format1));
+                    $("#id_end_1").val(getTime(selectionInfo.end, false));
+                    $('#add_event_modal').modal('show');
+                },
+                eventClick: function (info) {
+                    var eventId = info.event.id;
+                    $.ajax({
+                        url: {% url 'ajax_load_edit_event_modal' %},
+                        data: {
+                            'event_id': eventId
+                        },
+                        success: function (data) {
+                            $('#event_info_div').html(data);
+                            $('#event_info_modal').modal('show');
+                        }
+                    });
+                },
+                eventDrop: function (info) {
+                    if (!window.confirm("Are you sure about this change?")) {
+                        info.revert();
+                    } else {
+                        $.ajax({
+                            url: {% url 'ajax_drag_and_save_event' %},
+                            data: {
+                                'id': info.event.id,
+                                'start': info.event.startStr,
+                                'end': info.event.endStr,
+                            },
+                            success: function (data) {
+                                if (data) {
+                                    showSuccessNotification(info.event.title, data);
+                                }
+                            },
+                            error: function (data) {
+                                console.log(data);
+                            }
+                        });
+                    }
+                }
+            });
+            calendar.render();
+        });
+        $('#id_allday').change(function () {
+            var allday = $(this).prop('checked');
+            $('#id_start_1').prop('hidden', allday);
+            $('#id_end_1').prop('hidden', allday);
+        });
+
+    </script>
+{% endblock %}
